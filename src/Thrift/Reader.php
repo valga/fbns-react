@@ -1,0 +1,239 @@
+<?php
+
+namespace Fbns\Client\Thrift;
+
+/**
+ * WARNING: This implementation is not complete.
+ *
+ * @see https://thrift.apache.org/
+ */
+class Reader
+{
+    /**
+     * @var int[]
+     */
+    private $stack;
+
+    /**
+     * @var int
+     */
+    private $field;
+
+    /**
+     * @var string
+     */
+    private $buffer;
+
+    /**
+     * @var int
+     */
+    private $length;
+
+    /**
+     * @var int
+     */
+    private $position;
+
+    /**
+     * @var callable|null
+     */
+    private $handler;
+
+    /**
+     * Reader constructor.
+     *
+     * @param string        $buffer
+     * @param callable|null $handler
+     */
+    public function __construct($buffer = '', callable $handler = null)
+    {
+        $this->buffer = $buffer;
+        $this->position = 0;
+        $this->length = strlen($buffer);
+        $this->field = 0;
+        $this->stack = [];
+        $this->handler = $handler;
+        $this->parse();
+    }
+
+    /**
+     * Parser.
+     */
+    private function parse()
+    {
+        $context = '';
+        while ($this->position < $this->length) {
+            $type = $this->readField();
+            switch ($type) {
+                case Compact::TYPE_STRUCT:
+                    array_push($this->stack, $this->field);
+                    $this->field = 0;
+                    $context = implode('/', $this->stack);
+                    break;
+                case Compact::TYPE_STOP:
+                    if (!count($this->stack)) {
+                        return;
+                    }
+                    $this->field = array_pop($this->stack);
+                    $context = implode('/', $this->stack);
+                    break;
+                case Compact::TYPE_LIST:
+                    $sizeAndType = $this->readUnsignedByte();
+                    $size = $sizeAndType >> 4;
+                    $type = $sizeAndType & 0x0f;
+                    if ($size === 0x0f) {
+                        $size = $this->readVarint();
+                    }
+                    $this->handleField($context, $this->field, $this->readList($size, $type));
+                    break;
+                case Compact::TYPE_TRUE:
+                case Compact::TYPE_FALSE:
+                    $this->handleField($context, $this->field, $type === Compact::TYPE_TRUE);
+                    break;
+                case Compact::TYPE_BYTE:
+                    $this->handleField($context, $this->field, $this->readSignedByte());
+                    break;
+                case Compact::TYPE_I16:
+                case Compact::TYPE_I32:
+                case Compact::TYPE_I64:
+                    $this->handleField($context, $this->field, $this->fromZigZag($this->readVarint()));
+                    break;
+                case Compact::TYPE_BINARY:
+                    $this->handleField($context, $this->field, $this->readString($this->readVarint()));
+                    break;
+            }
+        }
+    }
+
+    /**
+     * @param int $size
+     * @param int $type
+     *
+     * @return array
+     */
+    private function readList($size, $type)
+    {
+        $result = [];
+        switch ($type) {
+            case Compact::TYPE_TRUE:
+            case Compact::TYPE_FALSE:
+                for ($i = 0; $i < $size; $i++) {
+                    $result[] = $this->readSignedByte() === Compact::TYPE_TRUE;
+                }
+                break;
+            case Compact::TYPE_BYTE:
+                for ($i = 0; $i < $size; $i++) {
+                    $result[] = $this->readSignedByte();
+                }
+                break;
+            case Compact::TYPE_I16:
+            case Compact::TYPE_I32:
+            case Compact::TYPE_I64:
+                for ($i = 0; $i < $size; $i++) {
+                    $result[] = $this->fromZigZag($this->readVarint());
+                }
+                break;
+            case Compact::TYPE_BINARY:
+                $result[] = $this->readString($this->readVarint());
+                break;
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return int
+     */
+    private function readField()
+    {
+        $typeAndDelta = ord($this->buffer[$this->position++]);
+        if ($typeAndDelta === Compact::TYPE_STOP) {
+            return Compact::TYPE_STOP;
+        }
+        $delta = $typeAndDelta >> 4;
+        if ($delta === 0) {
+            $this->field = $this->fromZigZag($this->readVarint());
+        } else {
+            $this->field += $delta;
+        }
+        $type = $typeAndDelta & 0x0f;
+
+        return $type;
+    }
+
+    /**
+     * @return int
+     */
+    private function readSignedByte()
+    {
+        $result = $this->readUnsignedByte();
+        if ($result > 0x7f) {
+            $result = 0 - (($result - 1) ^ 0xff);
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return int
+     */
+    private function readUnsignedByte()
+    {
+        return ord($this->buffer[$this->position++]);
+    }
+
+    /**
+     * @return int
+     */
+    private function readVarint()
+    {
+        $shift = 0;
+        $result = 0;
+        while ($this->position < $this->length) {
+            $byte = ord($this->buffer[$this->position++]);
+            $result |= ($byte & 0x7f) << $shift;
+            if (($byte >> 7) === 0) {
+                break;
+            }
+            $shift += 7;
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param int $n
+     *
+     * @return int
+     */
+    private function fromZigZag($n)
+    {
+        return ($n >> 1) ^ -($n & 1);
+    }
+
+    /**
+     * @param int $length
+     *
+     * @return string
+     */
+    private function readString($length)
+    {
+        $result = substr($this->buffer, $this->position, $length);
+        $this->position += $length;
+
+        return $result;
+    }
+
+    /**
+     * @param string $context
+     * @param int    $field
+     * @param mixed  $value
+     */
+    private function handleField($context, $field, $value)
+    {
+        if (!is_callable($this->handler)) {
+            return;
+        }
+        call_user_func($this->handler, $context, $field, $value);
+    }
+}
