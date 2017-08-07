@@ -19,7 +19,9 @@ use React\EventLoop\Timer\TimerInterface;
 use React\Promise\Deferred;
 use React\Promise\FulfilledPromise;
 use React\Promise\PromiseInterface;
+use React\Socket\Connector;
 use React\Socket\ConnectorInterface;
+use React\Socket\SecureConnector;
 
 class Lite implements EventEmitterInterface
 {
@@ -62,20 +64,26 @@ class Lite implements EventEmitterInterface
     /**
      * Constructor.
      *
-     * @param LoopInterface        $loop
-     * @param ConnectorInterface   $connector
-     * @param LoggerInterface|null $logger
+     * @param LoopInterface           $loop
+     * @param ConnectorInterface|null $connector
+     * @param LoggerInterface|null    $logger
      */
-    public function __construct(LoopInterface $loop, ConnectorInterface $connector, LoggerInterface $logger = null)
+    public function __construct(LoopInterface $loop, ConnectorInterface $connector = null, LoggerInterface $logger = null)
     {
         $this->loop = $loop;
-        $this->connector = $connector;
+        if ($connector === null) {
+            $this->connector = new SecureConnector(new Connector($loop), $loop);
+        } elseif (!$connector instanceof SecureConnector) {
+            $this->connector = new SecureConnector($connector, $loop);
+        } else {
+            $this->connector = $connector;
+        }
         if ($logger !== null) {
             $this->logger = $logger;
         } else {
             $this->logger = new NullLogger();
         }
-        $this->client = new ReactMqttClient($connector, $loop, null, new StreamParser());
+        $this->client = new ReactMqttClient($this->connector, $this->loop, null, new StreamParser());
 
         $this->client
             ->on('open', function () {
