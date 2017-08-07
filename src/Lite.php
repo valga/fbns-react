@@ -27,6 +27,8 @@ class Lite implements EventEmitterInterface
 {
     use EventEmitterTrait;
 
+    const QOS_LEVEL = 1;
+
     const MESSAGE_TOPIC = '/fbns_msg';
     const MESSAGE_TOPIC_ID = '76';
 
@@ -294,6 +296,6 @@ class Lite implements EventEmitterInterface
             9
         );
 
-        return $this->client->publish(new DefaultMessage(self::REG_REQ_TOPIC_ID, $payload));
+        return $this->client->publish(new DefaultMessage(self::REG_REQ_TOPIC_ID, $payload, self::QOS_LEVEL));
     }
 }
