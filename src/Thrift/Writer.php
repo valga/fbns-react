@@ -32,7 +32,15 @@ class Writer
      */
     private function toZigZag($number, $bits)
     {
-        return ($number << 1) ^ ($number >> ($bits - 1));
+        if (PHP_INT_SIZE === 4) {
+            $number = gmp_init($number, 10);
+        }
+        $result = ($number << 1) ^ ($number >> ($bits - 1));
+        if (PHP_INT_SIZE === 4) {
+            $result = gmp_strval($result, 10);
+        }
+
+        return $result;
     }
 
     /**
@@ -88,12 +96,26 @@ class Writer
      */
     private function writeVarint($number)
     {
+        if (PHP_INT_SIZE === 4) {
+            $number = gmp_init($number, 10);
+        }
         while (true) {
-            if (($number & (~0x7f)) === 0) {
+            $byte = $number & (~0x7f);
+            if (PHP_INT_SIZE === 4) {
+                $byte = (int) gmp_strval($byte, 10);
+            }
+            if ($byte === 0) {
+                if (PHP_INT_SIZE === 4) {
+                    $number = (int) gmp_strval($number, 10);
+                }
                 $this->buffer .= chr($number);
                 break;
             } else {
-                $this->buffer .= chr(($number & 0xff) | 0x80);
+                $byte = ($number & 0xff) | 0x80;
+                if (PHP_INT_SIZE === 4) {
+                    $byte = (int) gmp_strval($byte, 10);
+                }
+                $this->buffer .= chr($byte);
                 $number = $number >> 7;
             }
         }
@@ -239,6 +261,9 @@ class Writer
 
     public function __construct()
     {
+        if (PHP_INT_SIZE === 4 && !extension_loaded('gmp')) {
+            throw new \RuntimeException('You need to install GMP extension to run this code with x86 PHP build.');
+        }
         $this->buffer = '';
         $this->field = 0;
         $this->stack = [];

@@ -3,6 +3,7 @@
 namespace Fbns\Client\Auth;
 
 use Fbns\Client\AuthInterface;
+use Fbns\Client\Json;
 
 class DeviceAuth implements AuthInterface
 {
@@ -73,33 +74,28 @@ class DeviceAuth implements AuthInterface
      */
     public function read($json)
     {
-        $data = json_decode($json);
-        $error = json_last_error();
-        if ($error !== JSON_ERROR_NONE) {
-            throw new \InvalidArgumentException(sprintf('Failed to decode JSON (%d): %s.', $error, json_last_error_msg()));
-        }
-
+        $data = Json::decode($json);
         $this->json = $json;
 
         if (isset($data->ck)) {
-            $this->userId = (int) $data->ck;
+            $this->userId = $data->ck;
         } else {
             $this->userId = 0;
         }
         if (isset($data->cs)) {
-            $this->password = (string) $data->cs;
+            $this->password = $data->cs;
         } else {
             $this->password = '';
         }
         if (isset($data->di)) {
-            $this->deviceId = (string) $data->di;
+            $this->deviceId = $data->di;
             $this->clientId = substr($this->deviceId, 0, 20);
         } else {
             $this->deviceId = '';
             $this->clientId = substr($this->randomUuid(), 0, 20);
         }
         if (isset($data->ds)) {
-            $this->deviceSecret = (string) $data->ds;
+            $this->deviceSecret = $data->ds;
         } else {
             $this->deviceSecret = '';
         }

@@ -47,6 +47,9 @@ class Reader
      */
     public function __construct($buffer = '', callable $handler = null)
     {
+        if (PHP_INT_SIZE === 4 && !extension_loaded('gmp')) {
+            throw new \RuntimeException('You need to install GMP extension to run this code with x86 PHP build.');
+        }
         $this->buffer = $buffer;
         $this->position = 0;
         $this->length = strlen($buffer);
@@ -189,13 +192,25 @@ class Reader
     {
         $shift = 0;
         $result = 0;
+        if (PHP_INT_SIZE === 4) {
+            $result = gmp_init($result, 10);
+        }
         while ($this->position < $this->length) {
             $byte = ord($this->buffer[$this->position++]);
+            if (PHP_INT_SIZE === 4) {
+                $byte = gmp_init($byte, 10);
+            }
             $result |= ($byte & 0x7f) << $shift;
-            if (($byte >> 7) === 0) {
+            if (PHP_INT_SIZE === 4) {
+                $byte = (int) gmp_strval($byte, 10);
+            }
+            if ($byte >> 7 === 0) {
                 break;
             }
             $shift += 7;
+        }
+        if (PHP_INT_SIZE === 4) {
+            $result = gmp_strval($result, 10);
         }
 
         return $result;
@@ -208,7 +223,15 @@ class Reader
      */
     private function fromZigZag($n)
     {
-        return ($n >> 1) ^ -($n & 1);
+        if (PHP_INT_SIZE === 4) {
+            $n = gmp_init($n, 10);
+        }
+        $result = ($n >> 1) ^ -($n & 1);
+        if (PHP_INT_SIZE === 4) {
+            $result = gmp_strval($result, 10);
+        }
+
+        return $result;
     }
 
     /**

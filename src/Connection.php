@@ -9,7 +9,7 @@ class Connection
 {
     const FBNS_CLIENT_CAPABILITIES = 439;
     const FBNS_ENDPOINT_CAPABILITIES = 128;
-    const FBNS_APP_ID = 567310203415052;
+    const FBNS_APP_ID = '567310203415052';
     const FBNS_CLIENT_STACK = 3;
     const FBNS_PUBLISH_FORMAT = 1;
 
@@ -83,7 +83,7 @@ class Connection
         $this->makeUserAvailableInForeground = false;
         $this->isInitiallyForeground = false;
         $this->networkType = 1;
-        $this->networkSubType = 0;
+        $this->networkSubtype = 0;
         $this->subscribeTopics = [(int) Lite::MESSAGE_TOPIC_ID, (int) Lite::REG_RESP_TOPIC_ID];
         $this->appId = self::FBNS_APP_ID;
         $this->clientStack = self::CLIENT_STACK;

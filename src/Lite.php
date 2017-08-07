@@ -236,7 +236,6 @@ class Lite implements EventEmitterInterface
                         $deferred->resolve($this);
                     })
                     ->otherwise(function (\Exception $error) use ($deferred) {
-                        $this->logger->error($error->getMessage());
                         $deferred->reject($error);
                     });
             })

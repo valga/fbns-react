@@ -2,6 +2,8 @@
 
 namespace Fbns\Client\Message;
 
+use Fbns\Client\Json;
+
 class Register
 {
     /**
@@ -29,12 +31,7 @@ class Register
      */
     private function parseJson($json)
     {
-        $data = json_decode($json);
-        $error = json_last_error();
-        if ($error !== JSON_ERROR_NONE) {
-            throw new \InvalidArgumentException(sprintf('Failed to decode JSON (%d): %s.', $error, json_last_error_msg()));
-        }
-
+        $data = Json::decode($json);
         $this->json = $json;
 
         if (isset($data->pkg_name)) {
