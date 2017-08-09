@@ -1,10 +1,10 @@
 # fbns-react
 
-A PHP client for the FBNS.
+A PHP client for the FBNS built on top of ReactPHP.
 
 ## Requirements
 
-You need to install the [GMP extension]() to be able to run this code on x86 PHP builds.
+You need to install the [GMP extension](http://php.net/manual/en/book.gmp.php) to be able to run this code on x86 PHP builds.
 
 ## Installation
 
@@ -62,11 +62,23 @@ $loop->run();
 // Set up a proxy.
 $connector = new \React\Socket\Connector($loop);
 $proxy = new \Clue\React\HttpProxy('username:password@127.0.0.1:3128', $connector);
+
 // Disable SSL verification.
 $ssl = new \React\Socket\SecureConnector($proxy, $loop, ['verify_peer' => false, 'verify_peer_name' => false]);
+
 // Enable logging to stdout.
 $logger = new \Monolog\Logger('fbns');
 $logger->pushHandler(new \Monolog\Handler\StreamHandler('php://stdout', \Monolog\Logger::INFO));
+
 // Set up a client.
 $client = new \Fbns\Client\Lite($loop, $ssl, $logger);
+
+// Persistence.
+$client->on('disconnect', function () {
+    // Network connection has been closed. You can reestablish it if you want to.
+});
+$client->connect(HOSTNAME, PORT, $connection)
+    ->otherwise(function () {
+        // Connection attempt was unsuccessful, retry with an exponential backoff.
+    });
 ```

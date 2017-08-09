@@ -1,6 +1,6 @@
 {
     "name": "valga/fbns-react",
-    "description": "A PHP client for the FBNS",
+    "description": "A PHP client for the FBNS built on top of ReactPHP",
     "keywords": [
         "FBNS",
         "Client",
