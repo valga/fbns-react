@@ -83,26 +83,26 @@ class Reader
                 case Compact::TYPE_LIST:
                     $sizeAndType = $this->readUnsignedByte();
                     $size = $sizeAndType >> 4;
-                    $type = $sizeAndType & 0x0f;
+                    $listType = $sizeAndType & 0x0f;
                     if ($size === 0x0f) {
                         $size = $this->readVarint();
                     }
-                    $this->handleField($context, $this->field, $this->readList($size, $type));
+                    $this->handleField($context, $this->field, $this->readList($size, $listType), $listType);
                     break;
                 case Compact::TYPE_TRUE:
                 case Compact::TYPE_FALSE:
-                    $this->handleField($context, $this->field, $type === Compact::TYPE_TRUE);
+                    $this->handleField($context, $this->field, $type === Compact::TYPE_TRUE, $type);
                     break;
                 case Compact::TYPE_BYTE:
-                    $this->handleField($context, $this->field, $this->readSignedByte());
+                    $this->handleField($context, $this->field, $this->readSignedByte(), $type);
                     break;
                 case Compact::TYPE_I16:
                 case Compact::TYPE_I32:
                 case Compact::TYPE_I64:
-                    $this->handleField($context, $this->field, $this->fromZigZag($this->readVarint()));
+                    $this->handleField($context, $this->field, $this->fromZigZag($this->readVarint()), $type);
                     break;
                 case Compact::TYPE_BINARY:
-                    $this->handleField($context, $this->field, $this->readString($this->readVarint()));
+                    $this->handleField($context, $this->field, $this->readString($this->readVarint()), $type);
                     break;
             }
         }
@@ -251,12 +251,13 @@ class Reader
      * @param string $context
      * @param int    $field
      * @param mixed  $value
+     * @param int    $type
      */
-    private function handleField($context, $field, $value)
+    private function handleField($context, $field, $value, $type)
     {
         if (!is_callable($this->handler)) {
             return;
         }
-        call_user_func($this->handler, $context, $field, $value);
+        call_user_func($this->handler, $context, $field, $value, $type);
     }
 }
