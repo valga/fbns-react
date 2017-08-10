@@ -240,7 +240,7 @@ class ReactMqttClient extends EventEmitter
 
         $connection = new DefaultConnection();
         $this->startFlow(new OutgoingDisconnectFlow($connection), true)
-            ->then(function (Connection $connection) use ($deferred) {
+            ->then(function () use ($connection, $deferred) {
                 $this->isDisconnecting = false;
                 $this->isConnected = false;
 
