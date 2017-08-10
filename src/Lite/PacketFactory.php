@@ -15,7 +15,6 @@ use BinSoul\Net\Mqtt\Packet;
 use BinSoul\Net\Mqtt\Packet\DisconnectRequestPacket;
 use BinSoul\Net\Mqtt\Packet\PingRequestPacket;
 use BinSoul\Net\Mqtt\Packet\PingResponsePacket;
-use BinSoul\Net\Mqtt\Packet\PublishAckPacket;
 use BinSoul\Net\Mqtt\Packet\PublishCompletePacket;
 use BinSoul\Net\Mqtt\Packet\PublishReceivedPacket;
 use BinSoul\Net\Mqtt\Packet\PublishReleasePacket;
@@ -24,6 +23,7 @@ use BinSoul\Net\Mqtt\Packet\SubscribeRequestPacket;
 use BinSoul\Net\Mqtt\Packet\SubscribeResponsePacket;
 use BinSoul\Net\Mqtt\Packet\UnsubscribeRequestPacket;
 use BinSoul\Net\Mqtt\Packet\UnsubscribeResponsePacket;
+use Fbns\Client\Common\PublishAckPacket;
 
 /**
  * Builds instances of the {@see Packet} interface.
