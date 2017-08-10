@@ -38,6 +38,18 @@ class Lite implements EventEmitterInterface
     const REG_RESP_TOPIC = '/fbns_reg_resp';
     const REG_RESP_TOPIC_ID = '80';
 
+    const ID_TO_TOPIC_ENUM = [
+        self::MESSAGE_TOPIC_ID => self::MESSAGE_TOPIC,
+        self::REG_REQ_TOPIC_ID => self::REG_REQ_TOPIC,
+        self::REG_RESP_TOPIC_ID => self::REG_RESP_TOPIC,
+    ];
+
+    const TOPIC_TO_ID_ENUM = [
+        self::MESSAGE_TOPIC => self::MESSAGE_TOPIC_ID,
+        self::REG_REQ_TOPIC => self::REG_REQ_TOPIC_ID,
+        self::REG_RESP_TOPIC => self::REG_RESP_TOPIC_ID,
+    ];
+
     /**
      * @var LoopInterface
      */
@@ -115,7 +127,12 @@ class Lite implements EventEmitterInterface
                 $this->setKeepaliveTimer();
                 $this->onMessage($message);
             })
+            ->on('publish', function () {
+                $this->logger->info('Publish flow has been completed.');
+                $this->setKeepaliveTimer();
+            })
             ->on('ping', function () {
+                $this->logger->info('Ping flow has been completed.');
                 $this->setKeepaliveTimer();
             });
     }
@@ -192,20 +209,18 @@ class Lite implements EventEmitterInterface
             return;
         }
 
-        $topic = $message->getTopic();
-        $this->logger->info(sprintf('Received a message from topic "%s"', $topic), [$payload]);
+        $topic = $this->unmapTopic($message->getTopic());
+        $this->logger->info(sprintf('Received a message from topic "%s".', $topic), [$payload]);
 
         switch ($topic) {
             case self::MESSAGE_TOPIC:
-            case self::MESSAGE_TOPIC_ID:
                 $this->onPush($payload);
                 break;
             case self::REG_RESP_TOPIC:
-            case self::REG_RESP_TOPIC_ID:
                 $this->onRegister($payload);
                 break;
             default:
-                $this->logger->warning(sprintf('Received a message from unknown topic "%s"', $topic), [$payload]);
+                $this->logger->warning(sprintf('Received a message from unknown topic "%s".', $topic), [$payload]);
         }
     }
 
@@ -278,6 +293,64 @@ class Lite implements EventEmitterInterface
     }
 
     /**
+     * Maps human readable topic to its ID.
+     *
+     * @param string $topic
+     *
+     * @return string
+     */
+    private function mapTopic($topic)
+    {
+        if (array_key_exists($topic, self::TOPIC_TO_ID_ENUM)) {
+            $result = self::TOPIC_TO_ID_ENUM[$topic];
+            $this->logger->debug(sprintf('Topic "%s" has been mapped to "%s".', $topic, $result));
+        } else {
+            $result = $topic;
+            $this->logger->debug(sprintf('Topic "%s" does not exist in enum.', $topic));
+        }
+
+        return $result;
+    }
+
+    /**
+     * Maps topic ID to human readable name.
+     *
+     * @param string $topic
+     *
+     * @return string
+     */
+    private function unmapTopic($topic)
+    {
+        if (array_key_exists($topic, self::ID_TO_TOPIC_ENUM)) {
+            $result = self::ID_TO_TOPIC_ENUM[$topic];
+            $this->logger->debug(sprintf('Topic ID "%s" has been unmapped to "%s".', $topic, $result));
+        } else {
+            $result = $topic;
+            $this->logger->debug(sprintf('Topic ID "%s" does not exist in enum.', $topic));
+        }
+
+        return $result;
+    }
+
+    /**
+     * Publish a message to a topic.
+     *
+     * @param string $topic
+     * @param string $message
+     * @param int    $qosLevel
+     *
+     * @return \React\Promise\ExtendedPromiseInterface
+     */
+    private function publish($topic, $message, $qosLevel)
+    {
+        $this->logger->info(sprintf('Sending message to topic "%s".', $topic), [$message]);
+        $topic = $this->mapTopic($topic);
+        $payload = zlib_encode($message, ZLIB_ENCODING_DEFLATE, 9);
+
+        return $this->client->publish(new DefaultMessage($topic, $payload, $qosLevel));
+    }
+
+    /**
      * Registers an application.
      *
      * @param string     $packageName
@@ -287,15 +360,12 @@ class Lite implements EventEmitterInterface
      */
     public function register($packageName, $appId)
     {
-        $payload = zlib_encode(
-            json_encode([
-                'pkg_name' => (string) $packageName,
-                'appid' => (string) $appId,
-            ]),
-            ZLIB_ENCODING_DEFLATE,
-            9
-        );
+        $this->logger->info(sprintf('Registering application "%s" (%s).', $packageName, $appId));
+        $message = json_encode([
+            'pkg_name' => (string) $packageName,
+            'appid' => (string) $appId,
+        ]);
 
-        return $this->client->publish(new DefaultMessage(self::REG_REQ_TOPIC_ID, $payload, self::QOS_LEVEL));
+        return $this->publish(self::REG_REQ_TOPIC, $message, self::QOS_LEVEL);
     }
 }
