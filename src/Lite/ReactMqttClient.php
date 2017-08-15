@@ -560,6 +560,9 @@ class ReactMqttClient extends EventEmitter
         foreach ($this->timer as $timer) {
             $this->loop->cancelTimer($timer);
         }
+        $this->timer = [];
+
+        $this->cleanPreviousSession();
 
         $connection = $this->connection;
 
@@ -672,5 +675,21 @@ class ReactMqttClient extends EventEmitter
 
             $flow->getDeferred()->reject($result);
         }
+    }
+
+    /**
+     * Cleans previous session by rejecting all pending flows.
+     */
+    private function cleanPreviousSession()
+    {
+        $error = new \RuntimeException('Connection has been closed.');
+        foreach ($this->receivingFlows as $receivingFlow) {
+            $receivingFlow->getDeferred()->reject($error);
+        }
+        $this->receivingFlows = [];
+        foreach ($this->sendingFlows as $sendingFlow) {
+            $sendingFlow->getDeferred()->reject($error);
+        }
+        $this->sendingFlows = [];
     }
 }
