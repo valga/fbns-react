@@ -86,7 +86,7 @@ class Connection
         $this->networkSubtype = 0;
         $this->subscribeTopics = [(int) Lite::MESSAGE_TOPIC_ID, (int) Lite::REG_RESP_TOPIC_ID];
         $this->appId = self::FBNS_APP_ID;
-        $this->clientStack = self::CLIENT_STACK;
+        $this->clientStack = self::FBNS_CLIENT_STACK;
     }
 
     /**
