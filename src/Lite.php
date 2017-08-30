@@ -87,8 +87,6 @@ class Lite implements EventEmitterInterface
         $this->loop = $loop;
         if ($connector === null) {
             $this->connector = new SecureConnector(new Connector($loop), $loop);
-        } elseif (!$connector instanceof SecureConnector) {
-            $this->connector = new SecureConnector($connector, $loop);
         } else {
             $this->connector = $connector;
         }
