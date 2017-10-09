@@ -366,4 +366,14 @@ class Lite implements EventEmitterInterface
 
         return $this->publish(self::REG_REQ_TOPIC, $message, self::QOS_LEVEL);
     }
+
+    /**
+     * Checks whether underlying client is connected.
+     *
+     * @return bool
+     */
+    public function isConnected()
+    {
+        return $this->client->isConnected();
+    }
 }
