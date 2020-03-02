@@ -19,7 +19,7 @@ use BinSoul\Net\Mqtt\PacketStream;
  */
 class PublishAckPacket extends BasePublishAckPacket
 {
-    public function read(PacketStream $stream)
+    public function read(PacketStream $stream): void
     {
         BasePacket::read($stream);
         //$this->assertPacketFlags($this->getExpectedPacketFlags());

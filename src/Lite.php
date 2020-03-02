@@ -2,20 +2,23 @@
 
 namespace Fbns\Client;
 
+use BinSoul\Net\Mqtt\Client\React\ReactMqttClient;
+use BinSoul\Net\Mqtt\DefaultIdentifierGenerator;
 use BinSoul\Net\Mqtt\DefaultMessage;
 use BinSoul\Net\Mqtt\Message;
+use BinSoul\Net\Mqtt\StreamParser;
 use Evenement\EventEmitterInterface;
 use Evenement\EventEmitterTrait;
 use Fbns\Client\Lite\ConnectResponsePacket;
+use Fbns\Client\Lite\FlowFactory;
 use Fbns\Client\Lite\OutgoingConnectFlow;
-use Fbns\Client\Lite\ReactMqttClient;
-use Fbns\Client\Lite\StreamParser;
+use Fbns\Client\Lite\PacketFactory;
 use Fbns\Client\Message\Push;
 use Fbns\Client\Message\Register;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use React\EventLoop\LoopInterface;
-use React\EventLoop\Timer\TimerInterface;
+use React\EventLoop\TimerInterface;
 use React\Promise\Deferred;
 use React\Promise\FulfilledPromise;
 use React\Promise\PromiseInterface;
@@ -77,10 +80,6 @@ class Lite implements EventEmitterInterface
 
     /**
      * Constructor.
-     *
-     * @param LoopInterface           $loop
-     * @param ConnectorInterface|null $connector
-     * @param LoggerInterface|null    $logger
      */
     public function __construct(LoopInterface $loop, ConnectorInterface $connector = null, LoggerInterface $logger = null)
     {
@@ -95,7 +94,20 @@ class Lite implements EventEmitterInterface
         } else {
             $this->logger = new NullLogger();
         }
-        $this->client = new ReactMqttClient($this->connector, $this->loop, null, new StreamParser());
+
+        $identifierGenerator = new DefaultIdentifierGenerator();
+        $packetFactory = new PacketFactory();
+        $this->client = new ReactMqttClient(
+            $this->connector,
+            $this->loop,
+            $identifierGenerator,
+            new FlowFactory(
+                $identifierGenerator,
+                $identifierGenerator,
+                $packetFactory
+            ),
+            new StreamParser($packetFactory)
+        );
 
         $this->client
             ->on('open', function () {
@@ -106,17 +118,16 @@ class Lite implements EventEmitterInterface
                 $this->cancelKeepaliveTimer();
                 $this->emit('disconnect', [$this]);
             })
-            ->on('warning', function (\Exception $e) {
+            ->on('warning', function (\Throwable $e) {
                 $this->logger->warning($e->getMessage());
             })
-            ->on('error', function (\Exception $e) {
+            ->on('error', function (\Throwable $e) {
                 $this->logger->error($e->getMessage());
                 $this->emit('error', [$e]);
             })
-            ->on('connect', function (ConnectResponsePacket $responsePacket) {
+            ->on('connect', function () {
                 $this->logger->info('Connected to a broker.');
                 $this->setKeepaliveTimer();
-                $this->emit('connect', [$responsePacket]);
             })
             ->on('disconnect', function () {
                 $this->logger->info('Disconnected from the broker.');
@@ -138,10 +149,8 @@ class Lite implements EventEmitterInterface
     private function cancelKeepaliveTimer()
     {
         if ($this->keepaliveTimer !== null) {
-            if ($this->keepaliveTimer->isActive()) {
-                $this->logger->info('Existing keepalive timer has been canceled.');
-                $this->keepaliveTimer->cancel();
-            }
+            $this->logger->info('Existing keepalive timer has been canceled.');
+            $this->loop->cancelTimer($this->keepaliveTimer);
             $this->keepaliveTimer = null;
         }
     }
@@ -195,9 +204,6 @@ class Lite implements EventEmitterInterface
         $this->emit('push', [$message]);
     }
 
-    /**
-     * @param Message $message
-     */
     private function onMessage(Message $message)
     {
         $payload = @zlib_decode($message->getPayload());
@@ -225,10 +231,9 @@ class Lite implements EventEmitterInterface
     /**
      * Establishes a connection to the FBNS server.
      *
-     * @param string     $host
-     * @param int        $port
-     * @param Connection $connection
-     * @param int        $timeout
+     * @param string $host
+     * @param int    $port
+     * @param int    $timeout
      *
      * @return PromiseInterface
      */
@@ -242,10 +247,9 @@ class Lite implements EventEmitterInterface
     /**
      * Connects to a FBNS server.
      *
-     * @param string     $host
-     * @param int        $port
-     * @param Connection $connection
-     * @param int        $timeout
+     * @param string $host
+     * @param int    $port
+     * @param int    $timeout
      *
      * @return PromiseInterface
      */
@@ -255,10 +259,11 @@ class Lite implements EventEmitterInterface
         $this->disconnect()
             ->then(function () use ($deferred, $host, $port, $connection, $timeout) {
                 $this->establishConnection($host, $port, $connection, $timeout)
-                    ->then(function () use ($deferred) {
+                    ->then(function (ConnectResponsePacket $responsePacket) use ($deferred) {
+                        $this->emit('connect', [$responsePacket]);
                         $deferred->resolve($this);
                     })
-                    ->otherwise(function (\Exception $error) use ($deferred) {
+                    ->otherwise(function (\Throwable $error) use ($deferred) {
                         $deferred->reject($error);
                     });
             })
@@ -280,7 +285,7 @@ class Lite implements EventEmitterInterface
                 ->then(function () use ($deferred) {
                     $deferred->resolve($this);
                 })
-                ->otherwise(function () use ($deferred) {
+                ->otherwise(function (\Throwable $e) use ($deferred) {
                     $deferred->reject($this);
                 });
 

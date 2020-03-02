@@ -42,8 +42,7 @@ class Reader
     /**
      * Reader constructor.
      *
-     * @param string        $buffer
-     * @param callable|null $handler
+     * @param string $buffer
      */
     public function __construct($buffer = '', callable $handler = null)
     {

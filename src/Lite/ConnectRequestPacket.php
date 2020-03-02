@@ -32,7 +32,7 @@ class ConnectRequestPacket extends BasePacket
 
     protected static $packetType = Packet::TYPE_CONNECT;
 
-    public function read(PacketStream $stream)
+    public function read(PacketStream $stream): void
     {
         parent::read($stream);
         $this->assertPacketFlags(0);
@@ -48,7 +48,7 @@ class ConnectRequestPacket extends BasePacket
         $this->payload = $stream->read($payloadLength);
     }
 
-    public function write(PacketStream $stream)
+    public function write(PacketStream $stream): void
     {
         $data = new PacketStream();
 
@@ -130,12 +130,7 @@ class ConnectRequestPacket extends BasePacket
     public function setFlags($value)
     {
         if ($value > 255) {
-            throw new \InvalidArgumentException(
-                sprintf(
-                    'Expected a flags lower than 255 but got %d.',
-                    $value
-                )
-            );
+            throw new \InvalidArgumentException(sprintf('Expected a flags lower than 255 but got %d.', $value));
         }
 
         $this->flags = $value;
@@ -161,12 +156,7 @@ class ConnectRequestPacket extends BasePacket
     public function setKeepAlive($value)
     {
         if ($value > 65535) {
-            throw new \InvalidArgumentException(
-                sprintf(
-                    'Expected a keep alive time lower than 65535 but got %d.',
-                    $value
-                )
-            );
+            throw new \InvalidArgumentException(sprintf('Expected a keep alive time lower than 65535 but got %d.', $value));
         }
 
         $this->keepAlive = $value;

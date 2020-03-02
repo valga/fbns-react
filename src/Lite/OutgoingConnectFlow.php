@@ -1,24 +1,17 @@
 <?php
 
-/*
- * This file is part of net-mqtt.
- *
- * Copyright (c) 2015 Sebastian Mößler code@binsoul.de
- *
- * This source file is subject to the MIT license.
- */
-
 namespace Fbns\Client\Lite;
 
-use BinSoul\Net\Mqtt\Flow\AbstractFlow;
+use BinSoul\Net\Mqtt\ClientIdentifierGenerator;
+use BinSoul\Net\Mqtt\Connection;
+use BinSoul\Net\Mqtt\Flow\OutgoingConnectFlow as BaseOutgoingConnectFlow;
 use BinSoul\Net\Mqtt\Packet;
-use BinSoul\Net\Mqtt\Packet\ConnectResponsePacket;
-use Fbns\Client\Connection;
+use BinSoul\Net\Mqtt\PacketFactory;
 
 /**
  * Represents a flow starting with an outgoing CONNECT packet.
  */
-class OutgoingConnectFlow extends AbstractFlow
+class OutgoingConnectFlow extends BaseOutgoingConnectFlow
 {
     const PROTOCOL_LEVEL = 3;
 
@@ -32,20 +25,14 @@ class OutgoingConnectFlow extends AbstractFlow
 
     /**
      * Constructs an instance of this class.
-     *
-     * @param Connection $connection
      */
-    public function __construct(Connection $connection)
+    public function __construct(PacketFactory $packetFactory, Connection $connection, ClientIdentifierGenerator $generator)
     {
         $this->connection = $connection;
+        parent::__construct($packetFactory, $connection, $generator);
     }
 
-    public function getCode()
-    {
-        return 'connect';
-    }
-
-    public function start()
+    public function start(): ?Packet
     {
         $packet = new ConnectRequestPacket();
         $packet->setProtocolLevel(self::PROTOCOL_LEVEL);
@@ -57,12 +44,7 @@ class OutgoingConnectFlow extends AbstractFlow
         return $packet;
     }
 
-    public function accept(Packet $packet)
-    {
-        return $packet->getPacketType() === Packet::TYPE_CONNACK;
-    }
-
-    public function next(Packet $packet)
+    public function next(Packet $packet): ?Packet
     {
         /** @var ConnectResponsePacket $packet */
         if ($packet->isSuccess()) {
@@ -70,5 +52,7 @@ class OutgoingConnectFlow extends AbstractFlow
         } else {
             $this->fail($packet->getErrorName());
         }
+
+        return null;
     }
 }

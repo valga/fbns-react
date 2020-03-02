@@ -2,10 +2,12 @@
 
 namespace Fbns\Client;
 
+use BinSoul\Net\Mqtt\Connection as ConnectionInterface;
+use BinSoul\Net\Mqtt\Message;
 use Fbns\Client\Thrift\Compact;
 use Fbns\Client\Thrift\Writer;
 
-class Connection
+class Connection implements ConnectionInterface
 {
     const FBNS_CLIENT_CAPABILITIES = 439;
     const FBNS_ENDPOINT_CAPABILITIES = 128;
@@ -68,8 +70,7 @@ class Connection
     /**
      * Connection constructor.
      *
-     * @param AuthInterface $auth
-     * @param string        $userAgent
+     * @param string $userAgent
      */
     public function __construct(AuthInterface $auth, $userAgent)
     {
@@ -329,11 +330,68 @@ class Connection
         return $this->auth;
     }
 
-    /**
-     * @param AuthInterface $auth
-     */
     public function setAuth(AuthInterface $auth)
     {
         $this->auth = $auth;
+    }
+
+    public function getProtocol(): int
+    {
+        // TODO: Implement getProtocol() method.
+    }
+
+    public function getClientID(): string
+    {
+        return $this->auth->getClientId();
+    }
+
+    public function isCleanSession(): bool
+    {
+        // TODO: Implement isCleanSession() method.
+    }
+
+    public function getUsername(): string
+    {
+        // TODO: Implement getUsername() method.
+    }
+
+    public function getPassword(): string
+    {
+        // TODO: Implement getPassword() method.
+    }
+
+    public function getWill(): ?Message
+    {
+        // TODO: Implement getWill() method.
+    }
+
+    public function getKeepAlive(): int
+    {
+        return 100;
+    }
+
+    public function withProtocol(int $protocol): ConnectionInterface
+    {
+        // TODO: Implement withProtocol() method.
+    }
+
+    public function withClientID(string $clientID): ConnectionInterface
+    {
+        // TODO: Implement withClientID() method.
+    }
+
+    public function withCredentials(string $username, string $password): ConnectionInterface
+    {
+        // TODO: Implement withCredentials() method.
+    }
+
+    public function withWill(Message $will): ConnectionInterface
+    {
+        // TODO: Implement withWill() method.
+    }
+
+    public function withKeepAlive(int $timeout): ConnectionInterface
+    {
+        // TODO: Implement withKeepAlive() method.
     }
 }

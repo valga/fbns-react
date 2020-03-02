@@ -198,9 +198,8 @@ class Writer
     }
 
     /**
-     * @param int   $field
-     * @param int   $type
-     * @param array $list
+     * @param int $field
+     * @param int $type
      */
     public function writeList($field, $type, array $list)
     {

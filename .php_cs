@@ -17,4 +17,6 @@ return \PhpCsFixer\Config::create()
         'ordered_imports'                     => true,
         'phpdoc_order'                        => true,
         'array_syntax'                        => ['syntax' => 'short'],
+        'increment_style'                     => null,
+        'yoda_style'                          => ['equal' => false, 'identical' => false],
     ]);

@@ -56,7 +56,7 @@ class ConnectResponsePacket extends BasePacket
 
     protected static $packetType = Packet::TYPE_CONNACK;
 
-    public function read(PacketStream $stream)
+    public function read(PacketStream $stream): void
     {
         parent::read($stream);
         $this->assertPacketFlags(0);
@@ -74,7 +74,7 @@ class ConnectResponsePacket extends BasePacket
         }
     }
 
-    public function write(PacketStream $stream)
+    public function write(PacketStream $stream): void
     {
         $data = new PacketStream();
 
