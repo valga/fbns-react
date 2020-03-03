@@ -42,9 +42,9 @@ class Reader
     /**
      * Reader constructor.
      *
-     * @param string $buffer
+     * @param ?callable $handler
      */
-    public function __construct($buffer = '', callable $handler = null)
+    public function __construct(string $buffer = '', ?callable $handler = null)
     {
         if (PHP_INT_SIZE === 4 && !extension_loaded('gmp')) {
             throw new \RuntimeException('You need to install GMP extension to run this code with x86 PHP build.');
@@ -61,7 +61,7 @@ class Reader
     /**
      * Parser.
      */
-    private function parse()
+    private function parse(): void
     {
         $context = '';
         while ($this->position < $this->length) {
@@ -103,17 +103,20 @@ class Reader
                 case Compact::TYPE_BINARY:
                     $this->handleField($context, $this->field, $this->readString($this->readVarint()), $type);
                     break;
+                case Compact::TYPE_MAP:
+                    $size = $this->readVarint();
+                    $types = $this->readUnsignedByte();
+                    $keyType = $types >> 4;
+                    $valueType = $types & 0x0f;
+                    $this->handleField($context, $this->field, $this->readMap($size, $keyType, $valueType), $type);
+                    break;
+                default:
+                    throw new \DomainException("Unsupported field type {$type}.");
             }
         }
     }
 
-    /**
-     * @param int $size
-     * @param int $type
-     *
-     * @return array
-     */
-    private function readList($size, $type)
+    private function readList(int $size, int $type): array
     {
         $result = [];
         switch ($type) {
@@ -138,15 +141,48 @@ class Reader
             case Compact::TYPE_BINARY:
                 $result[] = $this->readString($this->readVarint());
                 break;
+            default:
+                throw new \DomainException("Unsupported list item type {$type}.");
         }
 
         return $result;
     }
 
     /**
-     * @return int
+     * @return mixed
      */
-    private function readField()
+    private function readPrimitive(int $type)
+    {
+        switch ($type) {
+            case Compact::TYPE_TRUE:
+            case Compact::TYPE_FALSE:
+                return $this->readSignedByte() === Compact::TYPE_TRUE;
+            case Compact::TYPE_BYTE:
+                return $this->readSignedByte();
+            case Compact::TYPE_I16:
+            case Compact::TYPE_I32:
+            case Compact::TYPE_I64:
+                return $this->fromZigZag($this->readVarint());
+            case Compact::TYPE_BINARY:
+                return $this->readString($this->readVarint());
+            default:
+                throw new \DomainException("Unsupported primitive type {$type}.");
+        }
+    }
+
+    private function readMap(int $size, int $keyType, int $valueType): array
+    {
+        $map = [];
+        for ($i = 0; $i < $size; $i++) {
+            $key = $this->readPrimitive($keyType);
+            $value = $this->readPrimitive($valueType);
+            $map[$key] = $value;
+        }
+
+        return $map;
+    }
+
+    private function readField(): int
     {
         $typeAndDelta = ord($this->buffer[$this->position++]);
         if ($typeAndDelta === Compact::TYPE_STOP) {
@@ -163,10 +199,7 @@ class Reader
         return $type;
     }
 
-    /**
-     * @return int
-     */
-    private function readSignedByte()
+    private function readSignedByte(): int
     {
         $result = $this->readUnsignedByte();
         if ($result > 0x7f) {
@@ -176,16 +209,13 @@ class Reader
         return $result;
     }
 
-    /**
-     * @return int
-     */
-    private function readUnsignedByte()
+    private function readUnsignedByte(): int
     {
         return ord($this->buffer[$this->position++]);
     }
 
     /**
-     * @return int
+     * @return int|string
      */
     private function readVarint()
     {
@@ -216,9 +246,9 @@ class Reader
     }
 
     /**
-     * @param int $n
+     * @param int|string $n
      *
-     * @return int
+     * @return int|string
      */
     private function fromZigZag($n)
     {
@@ -233,12 +263,7 @@ class Reader
         return $result;
     }
 
-    /**
-     * @param int $length
-     *
-     * @return string
-     */
-    private function readString($length)
+    private function readString(int $length): string
     {
         $result = substr($this->buffer, $this->position, $length);
         $this->position += $length;
@@ -247,12 +272,9 @@ class Reader
     }
 
     /**
-     * @param string $context
-     * @param int    $field
-     * @param mixed  $value
-     * @param int    $type
+     * @param mixed $value
      */
-    private function handleField($context, $field, $value, $type)
+    private function handleField(string $context, int $field, $value, int $type)
     {
         if (!is_callable($this->handler)) {
             return;

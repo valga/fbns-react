@@ -5,37 +5,54 @@ namespace Fbns\Client\Thrift;
 class Debug extends Reader
 {
     /**
-     * @param string $context
-     * @param int    $field
-     * @param mixed  $value
-     * @param int    $type
+     * @param mixed $value
      */
-    private function handler($context, $field, $value, $type)
+    private function formatValue($value): string
     {
-        if (strlen($context)) {
+        switch (true) {
+            case is_bool($value):
+                return $value ? 'true' : 'false';
+            case is_string($value):
+                return "\"{$value}\"";
+            default:
+                return (string) $value;
+        }
+    }
+
+    private function formatList(array $values): string
+    {
+        return '['.implode(', ', array_map([$this, 'formatValue'], $values)).']';
+    }
+
+    private function formatMap(array $map): string
+    {
+        $pairs = [];
+        foreach ($map as $key => $value) {
+            $pairs[] = "\t".$this->formatValue($key).' => '.$this->formatValue($value);
+        }
+
+        return "{\n".implode(",\n", $pairs)."\n}";
+    }
+
+    /**
+     * @param mixed $value
+     */
+    private function handler(string $context, int $field, $value, int $type): void
+    {
+        if ($context !== '') {
             $field = $context.'/'.$field;
         }
-        if (is_bool($value)) {
-            $value = $value ? 'true' : 'false';
-        } elseif (is_array($value)) {
-            $value = array_map(function ($value) {
-                if (is_bool($value)) {
-                    $value = $value ? 'true' : 'false';
-                } elseif (is_string($value)) {
-                    $value = '"'.$value.'"';
-                } else {
-                    $value = (string) $value;
-                }
-
-                return $value;
-            }, $value);
-            $value = '['.implode(', ', $value).']';
-        } elseif (is_string($value)) {
-            $value = '"'.$value.'"';
-        } else {
-            $value = (string) $value;
+        switch (true) {
+            case is_array($value):
+                $formatted = $type === Compact::TYPE_MAP
+                    ? $this->formatMap($value)
+                    : $this->formatList($value);
+                break;
+            default:
+                $formatted = $this->formatValue($value);
         }
-        printf('%s (%02x): %s%s', $field, $type, $value, PHP_EOL);
+
+        printf('%s (%02x): %s%s', $field, $type, $formatted, PHP_EOL);
     }
 
     /**

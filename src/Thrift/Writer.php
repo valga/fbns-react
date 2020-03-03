@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Fbns\Client\Thrift;
 
 /**
@@ -25,12 +27,11 @@ class Writer
     private $stack;
 
     /**
-     * @param int $number
-     * @param int $bits
+     * @param int|string $number
      *
-     * @return int
+     * @return int|string
      */
-    private function toZigZag($number, $bits)
+    private function toZigZag($number, int $bits)
     {
         if (PHP_INT_SIZE === 4) {
             $number = gmp_init($number, 10);
@@ -43,43 +44,36 @@ class Writer
         return $result;
     }
 
-    /**
-     * @param int $number
-     */
-    private function writeByte($number)
+    private function writeByte(int $number): void
     {
         $this->buffer .= chr($number);
     }
 
     /**
-     * @param int $number
+     * @param int|string $number
      */
-    private function writeWord($number)
+    private function writeWord($number): void
     {
         $this->writeVarint($this->toZigZag($number, 16));
     }
 
     /**
-     * @param int $number
+     * @param int|string $number
      */
-    private function writeInt($number)
+    private function writeInt($number): void
     {
         $this->writeVarint($this->toZigZag($number, 32));
     }
 
     /**
-     * @param int $number
+     * @param int|string $number
      */
-    private function writeLongInt($number)
+    private function writeLongInt($number): void
     {
         $this->writeVarint($this->toZigZag($number, 64));
     }
 
-    /**
-     * @param int $field
-     * @param int $type
-     */
-    private function writeField($field, $type)
+    private function writeField(int $field, int $type): void
     {
         $delta = $field - $this->field;
         if ((0 < $delta) && ($delta <= 15)) {
@@ -92,9 +86,9 @@ class Writer
     }
 
     /**
-     * @param int $number
+     * @param int|string $number
      */
-    private function writeVarint($number)
+    private function writeVarint($number): void
     {
         if (PHP_INT_SIZE === 4) {
             $number = gmp_init($number, 10);
@@ -110,46 +104,65 @@ class Writer
                 }
                 $this->buffer .= chr($number);
                 break;
-            } else {
-                $byte = ($number & 0xff) | 0x80;
-                if (PHP_INT_SIZE === 4) {
-                    $byte = (int) gmp_strval($byte, 10);
-                }
-                $this->buffer .= chr($byte);
-                $number = $number >> 7;
             }
+            $byte = ($number & 0xff) | 0x80;
+            if (PHP_INT_SIZE === 4) {
+                $byte = (int) gmp_strval($byte, 10);
+            }
+            $this->buffer .= chr($byte);
+            $number >>= 7;
         }
     }
 
-    /**
-     * @param string $data
-     */
-    private function writeBinary($data)
+    private function writeBinary(string $data): void
     {
         $this->buffer .= $data;
     }
 
     /**
-     * @param int  $field
-     * @param bool $value
+     * @param mixed $value
      */
-    public function writeBool($field, $value)
+    private function writePrimitive(int $type, $value): void
+    {
+        switch ($type) {
+            case Compact::TYPE_TRUE:
+            case Compact::TYPE_FALSE:
+                $this->writeByte($value ? Compact::TYPE_TRUE : Compact::TYPE_FALSE);
+                break;
+            case Compact::TYPE_BYTE:
+                $this->writeByte($value);
+                break;
+            case Compact::TYPE_I16:
+                $this->writeWord($value);
+                break;
+            case Compact::TYPE_I32:
+                $this->writeInt($value);
+                break;
+            case Compact::TYPE_I64:
+                $this->writeLongInt($value);
+                break;
+            case Compact::TYPE_BINARY:
+                $this->writeVarint(strlen($value));
+                $this->writeBinary($value);
+                break;
+            default:
+                throw new \DomainException("Unsupported primitive type {$type}.");
+        }
+    }
+
+    public function writeBool(int $field, bool $value): void
     {
         $this->writeField($field, $value ? Compact::TYPE_TRUE : Compact::TYPE_FALSE);
     }
 
-    /**
-     * @param int    $field
-     * @param string $string
-     */
-    public function writeString($field, $string)
+    public function writeString(int $field, string $string): void
     {
         $this->writeField($field, Compact::TYPE_BINARY);
         $this->writeVarint(strlen($string));
         $this->writeBinary($string);
     }
 
-    public function writeStop()
+    public function writeStop(): void
     {
         $this->buffer .= chr(Compact::TYPE_STOP);
         if (count($this->stack)) {
@@ -158,50 +171,42 @@ class Writer
     }
 
     /**
-     * @param int $field
-     * @param int $number
+     * @param int|string $number
      */
-    public function writeInt8($field, $number)
+    public function writeInt8(int $field, $number): void
     {
         $this->writeField($field, Compact::TYPE_BYTE);
         $this->writeByte($number);
     }
 
     /**
-     * @param int $field
-     * @param int $number
+     * @param int|string $number
      */
-    public function writeInt16($field, $number)
+    public function writeInt16(int $field, $number): void
     {
         $this->writeField($field, Compact::TYPE_I16);
         $this->writeWord($number);
     }
 
     /**
-     * @param int $field
-     * @param int $number
+     * @param int|string $number
      */
-    public function writeInt32($field, $number)
+    public function writeInt32(int $field, $number): void
     {
         $this->writeField($field, Compact::TYPE_I32);
         $this->writeInt($number);
     }
 
     /**
-     * @param int $field
-     * @param int $number
+     * @param int|string $number
      */
-    public function writeInt64($field, $number)
+    public function writeInt64(int $field, $number): void
     {
         $this->writeField($field, Compact::TYPE_I64);
         $this->writeLongInt($number);
     }
 
-    /**
-     * @param int $field
-     * @param int $type
-     */
-    public function writeList($field, $type, array $list)
+    public function writeList(int $field, int $type, array $list): void
     {
         $this->writeField($field, Compact::TYPE_LIST);
         $size = count($list);
@@ -245,17 +250,27 @@ class Writer
                     $this->writeBinary($string);
                 }
                 break;
+            default:
+                throw new \DomainException("Unsupported list item type {$type}.");
         }
     }
 
-    /**
-     * @param int $field
-     */
-    public function writeStruct($field)
+    public function writeStruct(int $field): void
     {
         $this->writeField($field, Compact::TYPE_STRUCT);
         $this->stack[] = $this->field;
         $this->field = 0;
+    }
+
+    public function writeMap(int $field, int $keyType, int $valueType, array $map): void
+    {
+        $this->writeField($field, Compact::TYPE_MAP);
+        $this->writeVarint(count($map));
+        $this->writeByte(($keyType << 4) | $valueType);
+        foreach ($map as $key => $value) {
+            $this->writePrimitive($keyType, $key);
+            $this->writePrimitive($valueType, $value);
+        }
     }
 
     public function __construct()
@@ -268,10 +283,7 @@ class Writer
         $this->stack = [];
     }
 
-    /**
-     * @return string
-     */
-    public function __toString()
+    public function __toString(): string
     {
         return $this->buffer;
     }
