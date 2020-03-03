@@ -4,8 +4,9 @@ namespace Fbns\Client;
 
 use BinSoul\Net\Mqtt\Connection as ConnectionInterface;
 use BinSoul\Net\Mqtt\Message;
-use Fbns\Client\Thrift\Compact;
-use Fbns\Client\Thrift\Writer;
+use Fbns\Client\Proto\ClientInfo;
+use Fbns\Client\Proto\Connect;
+use Fbns\Client\Thrift\Compact\Writer;
 
 class Connection implements ConnectionInterface
 {
@@ -14,28 +15,6 @@ class Connection implements ConnectionInterface
     const FBNS_APP_ID = '567310203415052';
     const FBNS_CLIENT_STACK = 3;
     const FBNS_PUBLISH_FORMAT = 1;
-
-    const CLIENT_ID = 1;
-    const CLIENT_INFO = 4;
-    const PASSWORD = 5;
-
-    const USER_ID = 1;
-    const USER_AGENT = 2;
-    const CLIENT_CAPABILITIES = 3;
-    const ENDPOINT_CAPABILITIES = 4;
-    const PUBLISH_FORMAT = 5;
-    const NO_AUTOMATIC_FOREGROUND = 6;
-    const MAKE_USER_AVAILABLE_IN_FOREGROUND = 7;
-    const DEVICE_ID = 8;
-    const IS_INITIALLY_FOREGROUND = 9;
-    const NETWORK_TYPE = 10;
-    const NETWORK_SUBTYPE = 11;
-    const CLIENT_MQTT_SESSION_ID = 12;
-    const SUBSCRIBE_TOPICS = 14;
-    const CLIENT_TYPE = 15;
-    const APP_ID = 16;
-    const DEVICE_SECRET = 20;
-    const CLIENT_STACK = 21;
 
     /** @var AuthInterface */
     private $auth;
@@ -95,39 +74,37 @@ class Connection implements ConnectionInterface
      */
     public function toThrift()
     {
-        $writer = new Writer();
-
-        $writer->writeString(self::CLIENT_ID, $this->auth->getClientId());
-
-        $writer->writeStruct(self::CLIENT_INFO);
-        $writer->writeInt64(self::USER_ID, $this->auth->getUserId());
-        $writer->writeString(self::USER_AGENT, $this->userAgent);
-        $writer->writeInt64(self::CLIENT_CAPABILITIES, $this->clientCapabilities);
-        $writer->writeInt64(self::ENDPOINT_CAPABILITIES, $this->endpointCapabilities);
-        $writer->writeInt32(self::PUBLISH_FORMAT, $this->publishFormat);
-        $writer->writeBool(self::NO_AUTOMATIC_FOREGROUND, $this->noAutomaticForeground);
-        $writer->writeBool(self::MAKE_USER_AVAILABLE_IN_FOREGROUND, $this->makeUserAvailableInForeground);
-        $writer->writeString(self::DEVICE_ID, $this->auth->getDeviceId());
-        $writer->writeBool(self::IS_INITIALLY_FOREGROUND, $this->isInitiallyForeground);
-        $writer->writeInt32(self::NETWORK_TYPE, $this->networkType);
-        $writer->writeInt32(self::NETWORK_SUBTYPE, $this->networkSubtype);
+        $clientInfo = new ClientInfo();
+        $clientInfo->userId = $this->auth->getUserId();
+        $clientInfo->userAgent = $this->userAgent;
+        $clientInfo->clientCapabilities = $this->clientCapabilities;
+        $clientInfo->endpointCapabilities = $this->endpointCapabilities;
+        $clientInfo->publishFormat = $this->publishFormat;
+        $clientInfo->noAutomaticForeground = $this->noAutomaticForeground;
+        $clientInfo->makeUserAvailableInForeground = $this->makeUserAvailableInForeground;
+        $clientInfo->isInitiallyForeground = $this->isInitiallyForeground;
+        $clientInfo->networkType = $this->networkType;
+        $clientInfo->networkSubtype = $this->networkSubtype;
         if ($this->clientMqttSessionId === null) {
             $sessionId = (int) ((microtime(true) - strtotime('Last Monday')) * 1000);
         } else {
             $sessionId = $this->clientMqttSessionId;
         }
-        $writer->writeInt64(self::CLIENT_MQTT_SESSION_ID, $sessionId);
-        $writer->writeList(self::SUBSCRIBE_TOPICS, Compact::TYPE_I32, $this->subscribeTopics);
-        $writer->writeString(self::CLIENT_TYPE, $this->auth->getClientType());
-        $writer->writeInt64(self::APP_ID, $this->appId);
-        $writer->writeString(self::DEVICE_SECRET, $this->auth->getDeviceSecret());
-        $writer->writeInt8(self::CLIENT_STACK, $this->clientStack);
-        $writer->writeStop();
+        $clientInfo->clientMqttSessionId = $sessionId;
+        $clientInfo->subscribeTopics = [(int) Lite::MESSAGE_TOPIC_ID, (int) Lite::REG_RESP_TOPIC_ID];
+        $clientInfo->clientType = $this->auth->getClientType();
+        $clientInfo->appId = $this->appId;
+        $clientInfo->deviceSecret = $this->auth->getDeviceSecret();
+        $clientInfo->clientStack = $this->clientStack;
 
-        $writer->writeString(self::PASSWORD, $this->auth->getPassword());
-        $writer->writeStop();
+        $connect = new Connect();
+        $connect->clientIdentifier = $this->auth->getClientId();
+        $connect->clientInfo = $clientInfo;
+        $connect->password = $this->auth->getPassword();
 
-        return (string) $writer;
+        $writer = new Writer();
+
+        return $writer($connect->toStruct());
     }
 
     /**
