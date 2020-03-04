@@ -27,7 +27,8 @@ try {
 }
 
 // Connect to a broker.
-$connection = new \Fbns\Client\Connection($deviceAuth, USER_AGENT);
+$device = new \Fbns\Client\Device\DefaultDevice(USER_AGENT);
+$connection = new \Fbns\Client\Connection($auth, $device);
 $client->connect(HOSTNAME, PORT, $connection);
 
 // Bind events.

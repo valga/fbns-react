@@ -20,8 +20,8 @@ class Connection implements ConnectionInterface
     /** @var AuthInterface */
     private $auth;
 
-    /** @var string */
-    private $userAgent;
+    /** @var Device */
+    private $device;
 
     /** @var Network */
     private $network;
@@ -36,8 +36,6 @@ class Connection implements ConnectionInterface
     private $makeUserAvailableInForeground;
     /** @var bool */
     private $isInitiallyForeground;
-    /** @var int */
-    private $clientMqttSessionId;
     /** @var int[] */
     private $subscribeTopics;
     /** @var int */
@@ -45,15 +43,10 @@ class Connection implements ConnectionInterface
     /** @var int */
     private $clientStack;
 
-    /**
-     * Connection constructor.
-     *
-     * @param string $userAgent
-     */
-    public function __construct(AuthInterface $auth, $userAgent, Network $network = null)
+    public function __construct(AuthInterface $auth, Device $device, Network $network = null)
     {
         $this->auth = $auth;
-        $this->userAgent = $userAgent;
+        $this->device = $device;
         $this->network = $network ?? new Wifi();
 
         $this->clientCapabilities = ClientCapabilities::DEFAULT_SET;
@@ -70,7 +63,7 @@ class Connection implements ConnectionInterface
     {
         $clientInfo = new ClientInfo();
         $clientInfo->userId = $this->auth->getUserId();
-        $clientInfo->userAgent = $this->userAgent;
+        $clientInfo->userAgent = $this->device->userAgent();
         $clientInfo->clientCapabilities = $this->clientCapabilities;
         $clientInfo->endpointCapabilities = $this->endpointCapabilities;
         $clientInfo->publishFormat = PublishFormat::JZ;
@@ -79,12 +72,7 @@ class Connection implements ConnectionInterface
         $clientInfo->isInitiallyForeground = $this->isInitiallyForeground;
         $clientInfo->networkType = $this->network->type();
         $clientInfo->networkSubtype = $this->network->subtype();
-        if ($this->clientMqttSessionId === null) {
-            $sessionId = (int) ((microtime(true) - strtotime('Last Monday')) * 1000);
-        } else {
-            $sessionId = $this->clientMqttSessionId;
-        }
-        $clientInfo->clientMqttSessionId = $sessionId;
+        $clientInfo->clientMqttSessionId = $this->device->uptime();
         $clientInfo->subscribeTopics = [(int) Lite::MESSAGE_TOPIC_ID, (int) Lite::REG_RESP_TOPIC_ID];
         $clientInfo->clientType = $this->auth->getClientType();
         $clientInfo->appId = $this->appId;
@@ -110,22 +98,6 @@ class Connection implements ConnectionInterface
         $writer = new Writer();
 
         return $writer($connect->toStruct());
-    }
-
-    /**
-     * @return string
-     */
-    public function getUserAgent()
-    {
-        return $this->userAgent;
-    }
-
-    /**
-     * @param string $userAgent
-     */
-    public function setUserAgent($userAgent)
-    {
-        $this->userAgent = $userAgent;
     }
 
     /**
@@ -206,22 +178,6 @@ class Connection implements ConnectionInterface
     public function setIsInitiallyForeground($isInitiallyForeground)
     {
         $this->isInitiallyForeground = $isInitiallyForeground;
-    }
-
-    /**
-     * @return int
-     */
-    public function getClientMqttSessionId()
-    {
-        return $this->clientMqttSessionId;
-    }
-
-    /**
-     * @param int $clientMqttSessionId
-     */
-    public function setClientMqttSessionId($clientMqttSessionId)
-    {
-        $this->clientMqttSessionId = $clientMqttSessionId;
     }
 
     /**
