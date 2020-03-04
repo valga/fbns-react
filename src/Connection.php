@@ -13,9 +13,7 @@ use Fbns\Client\Thrift\Compact\Writer;
 
 class Connection implements ConnectionInterface
 {
-    const FBNS_ENDPOINT_CAPABILITIES = 128;
-    const FBNS_APP_ID = '567310203415052';
-    const FBNS_CLIENT_STACK = 3;
+    private const CLIENT_STACK = 3;
 
     /** @var AuthInterface */
     private $auth;
@@ -23,40 +21,18 @@ class Connection implements ConnectionInterface
     /** @var Device */
     private $device;
 
+    /** @var Endpoint */
+    private $endpoint;
+
     /** @var Network */
     private $network;
 
-    /** @var int */
-    private $clientCapabilities;
-    /** @var int */
-    private $endpointCapabilities;
-    /** @var bool */
-    private $noAutomaticForeground;
-    /** @var bool */
-    private $makeUserAvailableInForeground;
-    /** @var bool */
-    private $isInitiallyForeground;
-    /** @var int[] */
-    private $subscribeTopics;
-    /** @var int */
-    private $appId;
-    /** @var int */
-    private $clientStack;
-
-    public function __construct(AuthInterface $auth, Device $device, Network $network = null)
+    public function __construct(AuthInterface $auth, Device $device, Endpoint $endpoint, Network $network = null)
     {
         $this->auth = $auth;
         $this->device = $device;
+        $this->endpoint = $endpoint;
         $this->network = $network ?? new Wifi();
-
-        $this->clientCapabilities = ClientCapabilities::DEFAULT_SET;
-        $this->endpointCapabilities = self::FBNS_ENDPOINT_CAPABILITIES;
-        $this->noAutomaticForeground = true;
-        $this->makeUserAvailableInForeground = false;
-        $this->isInitiallyForeground = false;
-        $this->subscribeTopics = [(int) Lite::MESSAGE_TOPIC_ID, (int) Lite::REG_RESP_TOPIC_ID];
-        $this->appId = self::FBNS_APP_ID;
-        $this->clientStack = self::FBNS_CLIENT_STACK;
     }
 
     private function buildClientInfo(): ClientInfo
@@ -64,20 +40,22 @@ class Connection implements ConnectionInterface
         $clientInfo = new ClientInfo();
         $clientInfo->userId = $this->auth->getUserId();
         $clientInfo->userAgent = $this->device->userAgent();
-        $clientInfo->clientCapabilities = $this->clientCapabilities;
-        $clientInfo->endpointCapabilities = $this->endpointCapabilities;
+        $clientInfo->clientCapabilities = ClientCapabilities::DEFAULT_SET;
+        $clientInfo->endpointCapabilities = $this->endpoint->capabilities();
         $clientInfo->publishFormat = PublishFormat::JZ;
-        $clientInfo->noAutomaticForeground = $this->noAutomaticForeground;
-        $clientInfo->makeUserAvailableInForeground = $this->makeUserAvailableInForeground;
-        $clientInfo->isInitiallyForeground = $this->isInitiallyForeground;
+        $clientInfo->noAutomaticForeground = $this->endpoint->noAutomaticForeground();
+        $clientInfo->makeUserAvailableInForeground = $this->endpoint->makeUserAvailableInForeground();
+        $clientInfo->isInitiallyForeground = $this->endpoint->isInitiallyForeground();
         $clientInfo->networkType = $this->network->type();
         $clientInfo->networkSubtype = $this->network->subtype();
         $clientInfo->clientMqttSessionId = $this->device->uptime();
-        $clientInfo->subscribeTopics = [(int) Lite::MESSAGE_TOPIC_ID, (int) Lite::REG_RESP_TOPIC_ID];
+        $clientInfo->subscribeTopics = $this->endpoint->subscribeTopics();
         $clientInfo->clientType = $this->auth->getClientType();
-        $clientInfo->appId = $this->appId;
+        $clientInfo->appId = $this->endpoint->appId();
+        $clientInfo->regionPreference = $this->endpoint->regionPreference();
         $clientInfo->deviceSecret = $this->auth->getDeviceSecret();
-        $clientInfo->clientStack = $this->clientStack;
+        $clientInfo->clientStack = self::CLIENT_STACK;
+        $clientInfo->luid = $this->endpoint->loggerUserId();
 
         return $clientInfo;
     }
@@ -88,6 +66,7 @@ class Connection implements ConnectionInterface
         $connect->clientIdentifier = $this->auth->getClientId();
         $connect->clientInfo = $this->buildClientInfo();
         $connect->password = $this->auth->getPassword();
+        $connect->appSpecificInfo = $this->endpoint->appSpecificInfo();
 
         return $connect;
     }
@@ -100,150 +79,9 @@ class Connection implements ConnectionInterface
         return $writer($connect->toStruct());
     }
 
-    /**
-     * @return int
-     */
-    public function getClientCapabilities()
-    {
-        return $this->clientCapabilities;
-    }
-
-    /**
-     * @param int $clientCapabilities
-     */
-    public function setClientCapabilities($clientCapabilities)
-    {
-        $this->clientCapabilities = $clientCapabilities;
-    }
-
-    /**
-     * @return int
-     */
-    public function getEndpointCapabilities()
-    {
-        return $this->endpointCapabilities;
-    }
-
-    /**
-     * @param int $endpointCapabilities
-     */
-    public function setEndpointCapabilities($endpointCapabilities)
-    {
-        $this->endpointCapabilities = $endpointCapabilities;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isNoAutomaticForeground()
-    {
-        return $this->noAutomaticForeground;
-    }
-
-    /**
-     * @param bool $noAutomaticForeground
-     */
-    public function setNoAutomaticForeground($noAutomaticForeground)
-    {
-        $this->noAutomaticForeground = $noAutomaticForeground;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isMakeUserAvailableInForeground()
-    {
-        return $this->makeUserAvailableInForeground;
-    }
-
-    /**
-     * @param bool $makeUserAvailableInForeground
-     */
-    public function setMakeUserAvailableInForeground($makeUserAvailableInForeground)
-    {
-        $this->makeUserAvailableInForeground = $makeUserAvailableInForeground;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isInitiallyForeground()
-    {
-        return $this->isInitiallyForeground;
-    }
-
-    /**
-     * @param bool $isInitiallyForeground
-     */
-    public function setIsInitiallyForeground($isInitiallyForeground)
-    {
-        $this->isInitiallyForeground = $isInitiallyForeground;
-    }
-
-    /**
-     * @return int[]
-     */
-    public function getSubscribeTopics()
-    {
-        return $this->subscribeTopics;
-    }
-
-    /**
-     * @param int[] $subscribeTopics
-     */
-    public function setSubscribeTopics($subscribeTopics)
-    {
-        $this->subscribeTopics = $subscribeTopics;
-    }
-
-    /**
-     * @return int
-     */
-    public function getAppId()
-    {
-        return $this->appId;
-    }
-
-    /**
-     * @param int $appId
-     */
-    public function setAppId($appId)
-    {
-        $this->appId = $appId;
-    }
-
-    /**
-     * @return int
-     */
-    public function getClientStack()
-    {
-        return $this->clientStack;
-    }
-
-    /**
-     * @param int $clientStack
-     */
-    public function setClientStack($clientStack)
-    {
-        $this->clientStack = $clientStack;
-    }
-
-    /**
-     * @return AuthInterface
-     */
-    public function getAuth()
-    {
-        return $this->auth;
-    }
-
-    public function setAuth(AuthInterface $auth)
-    {
-        $this->auth = $auth;
-    }
-
     public function getProtocol(): int
     {
-        return 3;
+        return self::CLIENT_STACK;
     }
 
     public function getClientID(): string
