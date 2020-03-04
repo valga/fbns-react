@@ -5,6 +5,7 @@ namespace Fbns\Client;
 use BinSoul\Net\Mqtt\Connection as ConnectionInterface;
 use BinSoul\Net\Mqtt\Message;
 use Fbns\Client\Mqtt\ClientCapabilities;
+use Fbns\Client\Network\Wifi;
 use Fbns\Client\Proto\ClientInfo;
 use Fbns\Client\Proto\Connect;
 use Fbns\Client\Thrift\Compact\Writer;
@@ -21,6 +22,10 @@ class Connection implements ConnectionInterface
 
     /** @var string */
     private $userAgent;
+
+    /** @var Network */
+    private $network;
+
     /** @var int */
     private $clientCapabilities;
     /** @var int */
@@ -33,10 +38,6 @@ class Connection implements ConnectionInterface
     private $makeUserAvailableInForeground;
     /** @var bool */
     private $isInitiallyForeground;
-    /** @var int */
-    private $networkType;
-    /** @var int */
-    private $networkSubtype;
     /** @var int */
     private $clientMqttSessionId;
     /** @var int[] */
@@ -51,10 +52,11 @@ class Connection implements ConnectionInterface
      *
      * @param string $userAgent
      */
-    public function __construct(AuthInterface $auth, $userAgent)
+    public function __construct(AuthInterface $auth, $userAgent, Network $network = null)
     {
         $this->auth = $auth;
         $this->userAgent = $userAgent;
+        $this->network = $network ?? new Wifi();
 
         $this->clientCapabilities = ClientCapabilities::DEFAULT_SET;
         $this->endpointCapabilities = self::FBNS_ENDPOINT_CAPABILITIES;
@@ -62,8 +64,6 @@ class Connection implements ConnectionInterface
         $this->noAutomaticForeground = true;
         $this->makeUserAvailableInForeground = false;
         $this->isInitiallyForeground = false;
-        $this->networkType = 1;
-        $this->networkSubtype = 0;
         $this->subscribeTopics = [(int) Lite::MESSAGE_TOPIC_ID, (int) Lite::REG_RESP_TOPIC_ID];
         $this->appId = self::FBNS_APP_ID;
         $this->clientStack = self::FBNS_CLIENT_STACK;
@@ -83,8 +83,8 @@ class Connection implements ConnectionInterface
         $clientInfo->noAutomaticForeground = $this->noAutomaticForeground;
         $clientInfo->makeUserAvailableInForeground = $this->makeUserAvailableInForeground;
         $clientInfo->isInitiallyForeground = $this->isInitiallyForeground;
-        $clientInfo->networkType = $this->networkType;
-        $clientInfo->networkSubtype = $this->networkSubtype;
+        $clientInfo->networkType = $this->network->type();
+        $clientInfo->networkSubtype = $this->network->subtype();
         if ($this->clientMqttSessionId === null) {
             $sessionId = (int) ((microtime(true) - strtotime('Last Monday')) * 1000);
         } else {
@@ -201,38 +201,6 @@ class Connection implements ConnectionInterface
     public function setIsInitiallyForeground($isInitiallyForeground)
     {
         $this->isInitiallyForeground = $isInitiallyForeground;
-    }
-
-    /**
-     * @return int
-     */
-    public function getNetworkType()
-    {
-        return $this->networkType;
-    }
-
-    /**
-     * @param int $networkType
-     */
-    public function setNetworkType($networkType)
-    {
-        $this->networkType = $networkType;
-    }
-
-    /**
-     * @return int
-     */
-    public function getNetworkSubtype()
-    {
-        return $this->networkSubtype;
-    }
-
-    /**
-     * @param int $networkSubtype
-     */
-    public function setNetworkSubtype($networkSubtype)
-    {
-        $this->networkSubtype = $networkSubtype;
     }
 
     /**
