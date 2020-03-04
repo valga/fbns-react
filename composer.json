@@ -22,6 +22,7 @@
     },
     "require": {
         "php": "^7.4",
+        "ext-json": "*",
         "ext-mbstring": "*",
         "ext-zlib": "*",
         "evenement/evenement": "~2.0|~3.0",

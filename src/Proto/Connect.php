@@ -10,7 +10,7 @@ use Fbns\Client\Thrift\Map;
 use Fbns\Client\Thrift\Series;
 use Fbns\Client\Thrift\Struct;
 
-class Connect
+class Connect implements \JsonSerializable
 {
     /** @var string */
     public $clientIdentifier;
@@ -107,5 +107,22 @@ class Connect
             yield 9 => new Field(Types::BINARY, $this->zeroRatingTokenHash);
             yield 10 => new Map(Types::BINARY, Types::BINARY, $this->appSpecificInfo);
         })());
+    }
+
+    public function jsonSerialize()
+    {
+        $result = [
+            // DEVICE_ID
+            'd' => $this->clientIdentifier,
+            // APP_SPECIFIC_INFO
+            'app_specific_info' => $this->appSpecificInfo,
+        ];
+        if ($this->clientInfo !== null) {
+            $result = array_merge($result, $this->clientInfo->jsonSerialize());
+        }
+
+        return array_filter($result, static function ($value) {
+            return $value !== null;
+        });
     }
 }

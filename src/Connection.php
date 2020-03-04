@@ -5,6 +5,7 @@ namespace Fbns\Client;
 use BinSoul\Net\Mqtt\Connection as ConnectionInterface;
 use BinSoul\Net\Mqtt\Message;
 use Fbns\Client\Mqtt\ClientCapabilities;
+use Fbns\Client\Mqtt\PublishFormat;
 use Fbns\Client\Network\Wifi;
 use Fbns\Client\Proto\ClientInfo;
 use Fbns\Client\Proto\Connect;
@@ -15,7 +16,6 @@ class Connection implements ConnectionInterface
     const FBNS_ENDPOINT_CAPABILITIES = 128;
     const FBNS_APP_ID = '567310203415052';
     const FBNS_CLIENT_STACK = 3;
-    const FBNS_PUBLISH_FORMAT = 1;
 
     /** @var AuthInterface */
     private $auth;
@@ -30,8 +30,6 @@ class Connection implements ConnectionInterface
     private $clientCapabilities;
     /** @var int */
     private $endpointCapabilities;
-    /** @var int */
-    private $publishFormat;
     /** @var bool */
     private $noAutomaticForeground;
     /** @var bool */
@@ -60,7 +58,6 @@ class Connection implements ConnectionInterface
 
         $this->clientCapabilities = ClientCapabilities::DEFAULT_SET;
         $this->endpointCapabilities = self::FBNS_ENDPOINT_CAPABILITIES;
-        $this->publishFormat = self::FBNS_PUBLISH_FORMAT;
         $this->noAutomaticForeground = true;
         $this->makeUserAvailableInForeground = false;
         $this->isInitiallyForeground = false;
@@ -69,17 +66,14 @@ class Connection implements ConnectionInterface
         $this->clientStack = self::FBNS_CLIENT_STACK;
     }
 
-    /**
-     * @return string
-     */
-    public function toThrift()
+    private function buildClientInfo(): ClientInfo
     {
         $clientInfo = new ClientInfo();
         $clientInfo->userId = $this->auth->getUserId();
         $clientInfo->userAgent = $this->userAgent;
         $clientInfo->clientCapabilities = $this->clientCapabilities;
         $clientInfo->endpointCapabilities = $this->endpointCapabilities;
-        $clientInfo->publishFormat = $this->publishFormat;
+        $clientInfo->publishFormat = PublishFormat::JZ;
         $clientInfo->noAutomaticForeground = $this->noAutomaticForeground;
         $clientInfo->makeUserAvailableInForeground = $this->makeUserAvailableInForeground;
         $clientInfo->isInitiallyForeground = $this->isInitiallyForeground;
@@ -97,11 +91,22 @@ class Connection implements ConnectionInterface
         $clientInfo->deviceSecret = $this->auth->getDeviceSecret();
         $clientInfo->clientStack = $this->clientStack;
 
+        return $clientInfo;
+    }
+
+    private function buildConnect(): Connect
+    {
         $connect = new Connect();
         $connect->clientIdentifier = $this->auth->getClientId();
-        $connect->clientInfo = $clientInfo;
+        $connect->clientInfo = $this->buildClientInfo();
         $connect->password = $this->auth->getPassword();
 
+        return $connect;
+    }
+
+    public function toThrift(): string
+    {
+        $connect = $this->buildConnect();
         $writer = new Writer();
 
         return $writer($connect->toStruct());
@@ -282,7 +287,7 @@ class Connection implements ConnectionInterface
 
     public function getProtocol(): int
     {
-        // TODO: Implement getProtocol() method.
+        return 3;
     }
 
     public function getClientID(): string
@@ -292,22 +297,22 @@ class Connection implements ConnectionInterface
 
     public function isCleanSession(): bool
     {
-        // TODO: Implement isCleanSession() method.
+        return true;
     }
 
     public function getUsername(): string
     {
-        // TODO: Implement getUsername() method.
+        return json_encode($this->buildConnect());
     }
 
     public function getPassword(): string
     {
-        // TODO: Implement getPassword() method.
+        return $this->auth->getPassword();
     }
 
     public function getWill(): ?Message
     {
-        // TODO: Implement getWill() method.
+        return null;
     }
 
     public function getKeepAlive(): int
@@ -315,28 +320,28 @@ class Connection implements ConnectionInterface
         return 100;
     }
 
-    public function withProtocol(int $protocol): ConnectionInterface
+    public function withProtocol(int $protocol): Connection
     {
-        // TODO: Implement withProtocol() method.
+        throw new \LogicException('Protocol version can not be changed.');
     }
 
-    public function withClientID(string $clientID): ConnectionInterface
+    public function withClientID(string $clientID): Connection
     {
-        // TODO: Implement withClientID() method.
+        throw new \LogicException('Client ID must be changed via Auth.');
     }
 
-    public function withCredentials(string $username, string $password): ConnectionInterface
+    public function withCredentials(string $username, string $password): Connection
     {
-        // TODO: Implement withCredentials() method.
+        throw new \LogicException('Credentials must be changed via Auth.');
     }
 
-    public function withWill(Message $will): ConnectionInterface
+    public function withWill(Message $will = null): Connection
     {
-        // TODO: Implement withWill() method.
+        throw new \LogicException('Will is not supported.');
     }
 
-    public function withKeepAlive(int $timeout): ConnectionInterface
+    public function withKeepAlive(int $timeout): Connection
     {
-        // TODO: Implement withKeepAlive() method.
+        throw new \LogicException('Keep alive interval can not be changed.');
     }
 }

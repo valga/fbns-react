@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Fbns\Client\Proto;
 
+use Fbns\Client\Mqtt\PublishFormat;
 use Fbns\Client\Thrift\Compact\Types;
 use Fbns\Client\Thrift\Field;
 use Fbns\Client\Thrift\Series;
 use Fbns\Client\Thrift\Struct;
 
-class ClientInfo
+class ClientInfo implements \JsonSerializable
 {
     /** @var int */
     public $userId;
@@ -192,5 +193,73 @@ class ClientInfo
             yield 24 => new Field(Types::BINARY, $this->fbnsDeviceId);
             yield 25 => new Field(Types::BINARY, $this->fbnsDeviceSecret);
         })());
+    }
+
+    private function formatPublishFormat(): ?string
+    {
+        switch ($this->publishFormat) {
+            case PublishFormat::JZ:
+                return 'jz';
+            case PublishFormat::JZO:
+                return 'jzo';
+            default:
+                return null;
+        }
+    }
+
+    public function jsonSerialize()
+    {
+        return [
+            // USER_ID
+            'u' => $this->userId,
+            // SESSION_ID
+            //'s' => $this->???,
+            // AGENT
+            'a' => $this->userAgent,
+            // CAPABILITIES
+            'cp' => $this->clientCapabilities,
+            // ENDPOINT_CAPABILITIES
+            'ecp' => $this->endpointCapabilities,
+            // PUBLISH_FORMAT
+            'pf' => $this->formatPublishFormat(),
+            // NO_AUTOMATIC_FOREGROUND
+            'no_auto_fg' => $this->noAutomaticForeground,
+            // MAKE_USER_AVAILABLE_IN_FOREGROUND
+            'chat_on' => $this->makeUserAvailableInForeground,
+            // INITIAL_FOREGROUND_STATE
+            'fg' => $this->isInitiallyForeground,
+            // DEVICE_SECRET
+            'ds' => $this->deviceSecret,
+            // NETWORK_TYPE
+            'nwt' => $this->networkType,
+            // NETWORK_SUBTYPE
+            'nwst' => $this->networkSubtype,
+            // CLIENT_MQTT_SESSION_ID
+            'mqtt_sid' => $this->clientMqttSessionId,
+            // SUBSCRIBE_TOPICS
+            'st' => $this->subscribeTopics,
+            // CLIENT_TYPE
+            'ct' => $this->clientType,
+            // APP_ID
+            'aid' => $this->appId,
+            // OVERRIDE_NECTAR_LOGGING
+            'log' => $this->overrideNectarLogging,
+            // DATACENTER_PREFERENCE
+            'dc' => $this->regionPreference,
+            // CONNECT_HASH
+            'h' => $this->connectTokenHash,
+            // FBNS_CONNECTION_KEY
+            'fbnsck' => $this->fbnsConnectionKey,
+            // FBNS_CONNECTION_SECRET
+            'fbnscs' => $this->fbnsConnectionSecret,
+            // FBNS_DEVICE_ID
+            'fbnsdi' => $this->fbnsDeviceId,
+            // FBNS_DEVICE_SECRET
+            'fbnsds' => $this->fbnsDeviceSecret,
+            // CLIENT_STACK
+            'clientStack' => $this->clientStack,
+            // NETWORK_TYPE_INFO
+            //'nwti' => $this->???,
+        ];
     }
 }
