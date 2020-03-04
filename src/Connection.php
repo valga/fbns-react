@@ -4,13 +4,13 @@ namespace Fbns\Client;
 
 use BinSoul\Net\Mqtt\Connection as ConnectionInterface;
 use BinSoul\Net\Mqtt\Message;
+use Fbns\Client\Mqtt\ClientCapabilities;
 use Fbns\Client\Proto\ClientInfo;
 use Fbns\Client\Proto\Connect;
 use Fbns\Client\Thrift\Compact\Writer;
 
 class Connection implements ConnectionInterface
 {
-    const FBNS_CLIENT_CAPABILITIES = 439;
     const FBNS_ENDPOINT_CAPABILITIES = 128;
     const FBNS_APP_ID = '567310203415052';
     const FBNS_CLIENT_STACK = 3;
@@ -56,7 +56,7 @@ class Connection implements ConnectionInterface
         $this->auth = $auth;
         $this->userAgent = $userAgent;
 
-        $this->clientCapabilities = self::FBNS_CLIENT_CAPABILITIES;
+        $this->clientCapabilities = ClientCapabilities::DEFAULT_SET;
         $this->endpointCapabilities = self::FBNS_ENDPOINT_CAPABILITIES;
         $this->publishFormat = self::FBNS_PUBLISH_FORMAT;
         $this->noAutomaticForeground = true;
