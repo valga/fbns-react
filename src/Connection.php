@@ -15,7 +15,7 @@ class Connection implements ConnectionInterface
 {
     private const CLIENT_STACK = 3;
 
-    /** @var AuthInterface */
+    /** @var Auth */
     private $auth;
 
     /** @var Device */
@@ -27,7 +27,7 @@ class Connection implements ConnectionInterface
     /** @var Network */
     private $network;
 
-    public function __construct(AuthInterface $auth, Device $device, Endpoint $endpoint, Network $network = null)
+    public function __construct(Auth $auth, Device $device, Endpoint $endpoint, Network $network = null)
     {
         $this->auth = $auth;
         $this->device = $device;
@@ -45,6 +45,7 @@ class Connection implements ConnectionInterface
         $clientInfo->publishFormat = PublishFormat::JZ;
         $clientInfo->noAutomaticForeground = $this->endpoint->noAutomaticForeground();
         $clientInfo->makeUserAvailableInForeground = $this->endpoint->makeUserAvailableInForeground();
+        $clientInfo->deviceId = $this->auth->getDeviceId();
         $clientInfo->isInitiallyForeground = $this->endpoint->isInitiallyForeground();
         $clientInfo->networkType = $this->network->type();
         $clientInfo->networkSubtype = $this->network->subtype();

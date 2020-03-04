@@ -1,65 +1,37 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Fbns\Client\Auth;
 
-use Fbns\Client\AuthInterface;
+use Fbns\Client\Auth;
 use Fbns\Client\Json;
+use Ramsey\Uuid\Uuid;
 
-class DeviceAuth implements AuthInterface
+class DeviceAuth implements Auth, \JsonSerializable
 {
-    const TYPE = 'device_auth';
+    private const TYPE = 'device_auth';
 
-    /**
-     * @var string
-     */
-    private $json;
-
-    /**
-     * @var int
-     */
+    /** @var string */
     private $clientId;
 
-    /**
-     * @var int
-     */
+    /** @var int */
     private $userId;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     private $password;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     private $deviceId;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     private $deviceSecret;
 
-    /**
-     * @return string
-     */
-    private function randomUuid()
+    private function randomUuid(): string
     {
-        return sprintf(
-            '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0x0fff) | 0x4000,
-            mt_rand(0, 0x3fff) | 0x8000,
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff)
-        );
+        return Uuid::uuid4()->toString();
     }
 
-    /**
-     * Constructor.
-     */
     public function __construct()
     {
         $this->clientId = substr($this->randomUuid(), 0, 20);
@@ -69,93 +41,64 @@ class DeviceAuth implements AuthInterface
         $this->deviceId = '';
     }
 
-    /**
-     * @param string $json
-     */
-    public function read($json)
+    public function read(string $json)
     {
         $data = Json::decode($json);
-        $this->json = $json;
 
         if (isset($data->ck)) {
             $this->userId = $data->ck;
-        } else {
-            $this->userId = 0;
         }
         if (isset($data->cs)) {
             $this->password = $data->cs;
-        } else {
-            $this->password = '';
         }
         if (isset($data->di)) {
             $this->deviceId = $data->di;
             $this->clientId = substr($this->deviceId, 0, 20);
-        } else {
-            $this->deviceId = '';
-            $this->clientId = substr($this->randomUuid(), 0, 20);
         }
         if (isset($data->ds)) {
             $this->deviceSecret = $data->ds;
-        } else {
-            $this->deviceSecret = '';
         }
 
         // TODO: sr ?
         // TODO: rc ?
     }
 
-    /**
-     * @return string
-     */
-    public function __toString()
+    public function jsonSerialize()
     {
-        return $this->json !== null ? $this->json : '';
+        return [
+            'ck' => $this->userId,
+            'cs' => $this->password,
+            'di' => $this->deviceId,
+            'ds' => $this->deviceSecret,
+        ];
     }
 
-    /**
-     * @return int
-     */
-    public function getUserId()
+    public function getUserId(): int
     {
         return $this->userId;
     }
 
-    /**
-     * @return string
-     */
-    public function getPassword()
+    public function getPassword(): string
     {
         return $this->password;
     }
 
-    /**
-     * @return string
-     */
-    public function getDeviceId()
+    public function getDeviceId(): string
     {
         return $this->deviceId;
     }
 
-    /**
-     * @return string
-     */
-    public function getDeviceSecret()
+    public function getDeviceSecret(): string
     {
         return $this->deviceSecret;
     }
 
-    /**
-     * @return string
-     */
-    public function getClientType()
+    public function getClientType(): string
     {
         return self::TYPE;
     }
 
-    /**
-     * @return string
-     */
-    public function getClientId()
+    public function getClientId(): string
     {
         return $this->clientId;
     }

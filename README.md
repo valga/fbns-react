@@ -19,14 +19,14 @@ composer require valga/fbns-react
 $loop = \React\EventLoop\Factory::create();
 $client = new \Fbns\Client\Lite($loop);
 
-// Read saved credentials from a storage.
+// Read saved credentials from the storage.
 $auth = new \Fbns\Client\Auth\DeviceAuth();
 try {
     $auth->read($storage->get('fbns_auth'));
 } catch (\Exception $e) {
 }
 
-// Connect to a broker.
+// Connect to the broker.
 $device = new \Fbns\Client\Device\DefaultDevice(USER_AGENT);
 $endpoint = new \Fbns\Client\Endpoint\PushEndpoint();
 $connection = new \Fbns\Client\Connection($auth, $device, $endpoint);
@@ -35,18 +35,18 @@ $client->connect(HOSTNAME, PORT, $connection);
 // Bind events.
 $client
     ->on('connect', function (\Fbns\Client\Lite\ConnectResponsePacket $responsePacket) use ($client, $auth, $storage) {
-        // Update credentials and save them to a storage for future use.
+        // Update credentials and save them to the storage for future use.
         try {
             $auth->read($responsePacket->getAuth());
-            $storage->set('fbns_auth', $responsePacket->getAuth());
+            $storage->set('fbns_auth', json_encode($auth));
         } catch (\Exception $e) {
         }
         
-        // Register an application.
+        // Register the application.
         $client->register(PACKAGE_NAME, APPLICATION_ID);
     })
     ->on('register', function (\Fbns\Client\Message\Register $message) use ($app) {
-        // Register received token with an application.
+        // Register received token with the application.
         $app->registerPushToken($message->getToken());
     })
     ->on('push', function (\Fbns\Client\Message\Push $message) use ($app) {
