@@ -12,12 +12,7 @@ use BinSoul\Net\Mqtt\PacketFactory;
 
 class OutgoingConnectFlow extends BaseOutgoingConnectFlow
 {
-    const PROTOCOL_LEVEL = 3;
-
-    const PROTOCOL_NAME = 'MQTToT';
-
-    const KEEPALIVE = 900;
-    const KEEPALIVE_TIMEOUT = 60;
+    private const PROTOCOL_NAME = 'MQTToT';
 
     /** @var Connection */
     private $connection;
@@ -34,9 +29,9 @@ class OutgoingConnectFlow extends BaseOutgoingConnectFlow
     public function start(): ?Packet
     {
         $packet = new ConnectRequestPacket();
-        $packet->setProtocolLevel(self::PROTOCOL_LEVEL);
+        $packet->setProtocolLevel($this->connection->getProtocol());
         $packet->setProtocolName(self::PROTOCOL_NAME);
-        $packet->setKeepAlive(self::KEEPALIVE);
+        $packet->setKeepAlive($this->connection->getKeepAlive());
         $packet->setFlags(194);
         $packet->setPayload(zlib_encode($this->connection->toThrift(), ZLIB_ENCODING_DEFLATE, 9));
 

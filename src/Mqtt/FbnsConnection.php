@@ -17,6 +17,7 @@ use Fbns\Client\Thrift\Compact\Writer;
 class FbnsConnection implements Connection
 {
     private const CLIENT_STACK = 3;
+    public const KEEPALIVE_INTERVAL = 900;
 
     /** @var Auth */
     private $auth;
@@ -115,7 +116,7 @@ class FbnsConnection implements Connection
 
     public function getKeepAlive(): int
     {
-        return 100;
+        return self::KEEPALIVE_INTERVAL;
     }
 
     public function withProtocol(int $protocol): Connection

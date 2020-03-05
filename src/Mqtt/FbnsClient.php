@@ -14,7 +14,6 @@ use Evenement\EventEmitterTrait;
 use Fbns\Client\Connection;
 use Fbns\Client\Lite\ConnectResponsePacket;
 use Fbns\Client\Lite\FlowFactory;
-use Fbns\Client\Lite\OutgoingConnectFlow;
 use Fbns\Client\Lite\PacketFactory;
 use Psr\Log\LoggerInterface;
 use React\EventLoop\LoopInterface;
@@ -200,7 +199,7 @@ class FbnsClient implements EventEmitterInterface
     private function setKeepaliveTimer(): void
     {
         $this->cancelKeepaliveTimer();
-        $keepaliveInterval = OutgoingConnectFlow::KEEPALIVE;
+        $keepaliveInterval = FbnsConnection::KEEPALIVE_INTERVAL;
         $this->logger->debug("Setting up keepalive timer to {$keepaliveInterval} seconds");
         $this->keepaliveTimer = $this->loop->addTimer($keepaliveInterval, function () {
             $this->logger->info('Keepalive timer has been fired');
