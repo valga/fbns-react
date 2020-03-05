@@ -14,7 +14,7 @@ use Fbns\Proto\ClientInfo;
 use Fbns\Proto\Connect;
 use Fbns\Thrift\Compact\Writer;
 
-class FbnsConnection implements Connection
+class RtiConnection implements Connection
 {
     private const CLIENT_STACK = 3;
     public const KEEPALIVE_INTERVAL = 900;

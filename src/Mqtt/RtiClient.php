@@ -23,7 +23,7 @@ use React\Promise\FulfilledPromise;
 use React\Promise\PromiseInterface;
 use React\Socket\ConnectorInterface;
 
-class FbnsClient implements EventEmitterInterface
+class RtiClient implements EventEmitterInterface
 {
     use EventEmitterTrait;
 
@@ -199,7 +199,7 @@ class FbnsClient implements EventEmitterInterface
     private function setKeepaliveTimer(): void
     {
         $this->cancelKeepaliveTimer();
-        $keepaliveInterval = FbnsConnection::KEEPALIVE_INTERVAL;
+        $keepaliveInterval = RtiConnection::KEEPALIVE_INTERVAL;
         $this->logger->debug("Setting up keepalive timer to {$keepaliveInterval} seconds");
         $this->keepaliveTimer = $this->loop->addTimer($keepaliveInterval, function () {
             $this->logger->info('Keepalive timer has been fired');

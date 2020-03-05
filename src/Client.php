@@ -9,11 +9,11 @@ use Evenement\EventEmitterInterface;
 use Evenement\EventEmitterTrait;
 use Fbns\Endpoint\PushEndpoint;
 use Fbns\Lite\ConnectResponsePacket;
-use Fbns\Mqtt\FbnsClient;
-use Fbns\Mqtt\FbnsConnection;
 use Fbns\Mqtt\QosLevel;
+use Fbns\Mqtt\RtiClient;
+use Fbns\Mqtt\RtiConnection;
+use Fbns\Push\FbnsTopics;
 use Fbns\Push\Notification;
-use Fbns\Push\PushTopics;
 use Fbns\Push\Registration;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -24,15 +24,15 @@ use React\Socket\Connector;
 use React\Socket\ConnectorInterface;
 use React\Socket\SecureConnector;
 
-class PushClient implements EventEmitterInterface
+class Client implements EventEmitterInterface
 {
     use EventEmitterTrait;
 
-    /** @var FbnsConnection */
+    /** @var RtiConnection */
     private $connection;
 
-    /** @var FbnsClient */
-    private $fbnsClient;
+    /** @var RtiClient */
+    private $rtiClient;
 
     /** @var Deferred[] */
     private $pendingRegistrations;
@@ -50,30 +50,30 @@ class PushClient implements EventEmitterInterface
     ) {
         $this->logger = $logger ?? new NullLogger();
         $connector = $connector ?? new SecureConnector(new Connector($loop), $loop);
-        $this->connection = new FbnsConnection($auth, $device, new PushEndpoint(), $network);
-        $this->fbnsClient = new FbnsClient($loop, $connector, $this->logger, new PushTopics($this->logger));
+        $this->connection = new RtiConnection($auth, $device, new PushEndpoint(), $network);
+        $this->rtiClient = new RtiClient($loop, $connector, $this->logger, new FbnsTopics($this->logger));
         $this->pendingRegistrations = [];
-        $this->bindEvents($this->fbnsClient);
+        $this->bindEvents($this->rtiClient);
     }
 
     public function connect(string $hostname, int $port, int $timeout = 5): PromiseInterface
     {
-        return $this->fbnsClient->connect($hostname, $port, $this->connection, $timeout);
+        return $this->rtiClient->connect($hostname, $port, $this->connection, $timeout);
     }
 
     public function isConnected(): bool
     {
-        return $this->fbnsClient->isConnected();
+        return $this->rtiClient->isConnected();
     }
 
     public function disconnect(): PromiseInterface
     {
-        return $this->fbnsClient->disconnect();
+        return $this->rtiClient->disconnect();
     }
 
     public function forceDisconnect(): void
     {
-        $this->fbnsClient->forceDisconnect();
+        $this->rtiClient->forceDisconnect();
     }
 
     public function register(string $packageName, string $applicationId): PromiseInterface
@@ -85,7 +85,7 @@ class PushClient implements EventEmitterInterface
             'pkg_name' => $packageName,
             'appid' => $applicationId,
         ]);
-        $this->fbnsClient->publish('/fbns_reg_req', $payload, QosLevel::ACKNOWLEDGED_DELIVERY)
+        $this->rtiClient->publish('/fbns_reg_req', $payload, QosLevel::ACKNOWLEDGED_DELIVERY)
             ->then(function () use ($packageName, $deferred) {
                 $this->pendingRegistrations[$packageName] = $deferred;
             })

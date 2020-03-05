@@ -8,7 +8,7 @@ use Fbns\Mqtt\DefaultTopicMapper;
 use Fbns\Mqtt\TopicMapper;
 use Psr\Log\LoggerInterface;
 
-class PushTopics implements TopicMapper
+class FbnsTopics implements TopicMapper
 {
     private const MAP = [
         '/fbns_msg' => 76,

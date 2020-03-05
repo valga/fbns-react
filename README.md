@@ -20,7 +20,7 @@ $loop = \React\EventLoop\Factory::create();
 $auth = new \Fbns\Auth\DeviceAuth();
 $device = new \Fbns\Device\DefaultDevice(USER_AGENT);
 $network = new \Fbns\Network\Wifi();
-$client = new \Fbns\PushClient($loop, $auth, $device, $network, $logger);
+$client = new \Fbns\Client($loop, $auth, $device, $network, $logger);
 
 // Read saved credentials from the storage.
 try {
@@ -71,7 +71,7 @@ $logger = new \Monolog\Logger('push');
 $logger->pushHandler(new \Monolog\Handler\StreamHandler('php://stdout', \Monolog\Logger::INFO));
 
 // Set up a Push client.
-$client = new \Fbns\PushClient($loop, $auth, $device, $network, $logger, $connector);
+$client = new \Fbns\Client($loop, $auth, $device, $network, $logger, $connector);
 
 // Persistence.
 $client->on('disconnect', static function () {
