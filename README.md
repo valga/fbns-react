@@ -1,6 +1,6 @@
 # fbns-react
 
-A PHP client for the FBNS, built on top of ReactPHP. Includes Push client implementation.
+A PHP client for the FBNS, built on top of ReactPHP. Includes generic RTI client implementation.
 
 ## Requirements
 
