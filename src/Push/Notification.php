@@ -1,10 +1,10 @@
 <?php
 
-namespace Fbns\Client\Message;
+namespace Fbns\Client\Push;
 
 use Fbns\Client\Json;
 
-class Push
+class Notification
 {
     /**
      * @var string

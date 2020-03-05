@@ -1,10 +1,10 @@
 # fbns-react
 
-A PHP client for the FBNS built on top of ReactPHP.
+A PHP client for the FBNS, built on top of ReactPHP. Includes Push client implementation.
 
 ## Requirements
 
-You need to install the [GMP extension](http://php.net/manual/en/book.gmp.php) to be able to run this code on x86 PHP builds.
+You have to install the [GMP extension](http://php.net/manual/en/book.gmp.php) to be able to run this code on x86 PHP builds.
 
 ## Installation
 
@@ -15,44 +15,42 @@ composer require valga/fbns-react
 ## Basic Usage
 
 ```php
-// Set up a FBNS client.
+// Set up a Push client.
 $loop = \React\EventLoop\Factory::create();
-$client = new \Fbns\Client\Lite($loop);
+$auth = new \Fbns\Client\Auth\DeviceAuth();
+$device = new \Fbns\Client\Device\DefaultDevice(USER_AGENT);
+$network = new \Fbns\Client\Network\Wifi();
+$client = new \Fbns\Client\PushClient($loop, $auth, $device, $network, $logger);
 
 // Read saved credentials from the storage.
-$auth = new \Fbns\Client\Auth\DeviceAuth();
 try {
     $auth->read($storage->get('fbns_auth'));
-} catch (\Exception $e) {
+} catch (\Throwable $e) {
 }
-
-// Connect to the broker.
-$device = new \Fbns\Client\Device\DefaultDevice(USER_AGENT);
-$endpoint = new \Fbns\Client\Endpoint\PushEndpoint();
-$connection = new \Fbns\Client\Connection($auth, $device, $endpoint);
-$client->connect(HOSTNAME, PORT, $connection);
 
 // Bind events.
 $client
-    ->on('connect', function (\Fbns\Client\Lite\ConnectResponsePacket $responsePacket) use ($client, $auth, $storage) {
+    ->on('connect', static function (string $jsonAuth) use ($client, $auth, $storage, $app) {
         // Update credentials and save them to the storage for future use.
         try {
-            $auth->read($responsePacket->getAuth());
+            $auth->read($jsonAuth);
             $storage->set('fbns_auth', json_encode($auth));
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
         }
         
         // Register the application.
-        $client->register(PACKAGE_NAME, APPLICATION_ID);
+        $client->register(PACKAGE_NAME, APPLICATION_ID)
+            ->then(static function (\Fbns\Client\Push\Registration $registration) use ($app) {
+                $app->registerPushToken($registration->getToken());
+            });
     })
-    ->on('register', function (\Fbns\Client\Message\Register $message) use ($app) {
-        // Register received token with the application.
-        $app->registerPushToken($message->getToken());
-    })
-    ->on('push', function (\Fbns\Client\Message\Push $message) use ($app) {
+    ->on('push', static function (\Fbns\Client\Push\Notification $message) use ($app) {
         // Handle received notification payload.
         $app->handlePushNotification($message->getPayload());
     });
+
+// Connect to the broker.
+$client->connect(HOSTNAME, PORT);
 
 // Run main loop.
 $loop->run();
@@ -69,18 +67,18 @@ $proxy = new \Clue\React\HttpProxy('username:password@127.0.0.1:3128', $connecto
 $ssl = new \React\Socket\SecureConnector($proxy, $loop, ['verify_peer' => false, 'verify_peer_name' => false]);
 
 // Enable logging to stdout.
-$logger = new \Monolog\Logger('fbns');
+$logger = new \Monolog\Logger('push');
 $logger->pushHandler(new \Monolog\Handler\StreamHandler('php://stdout', \Monolog\Logger::INFO));
 
-// Set up a client.
-$client = new \Fbns\Client\Lite($loop, $ssl, $logger);
+// Set up a Push client.
+$client = new \Fbns\Client\PushClient($loop, $auth, $device, $network, $logger, $connector);
 
 // Persistence.
-$client->on('disconnect', function () {
+$client->on('disconnect', static function () {
     // Network connection has been closed. You can reestablish it if you want to.
 });
-$client->connect(HOSTNAME, PORT, $connection)
-    ->otherwise(function () {
+$client->connect(HOSTNAME, PORT)
+    ->otherwise(static function () {
         // Connection attempt was unsuccessful, retry with an exponential backoff.
     });
 ```
