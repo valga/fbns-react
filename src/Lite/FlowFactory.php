@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Fbns\Client\Lite;
 
 use BinSoul\Net\Mqtt\ClientIdentifierGenerator;

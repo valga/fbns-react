@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Fbns\Client\Mqtt;
 
 use BinSoul\Net\Mqtt\Message;

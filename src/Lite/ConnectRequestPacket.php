@@ -1,12 +1,6 @@
 <?php
 
-/*
- * This file is part of net-mqtt.
- *
- * Copyright (c) 2015 Sebastian Mößler code@binsoul.de
- *
- * This source file is subject to the MIT license.
- */
+declare(strict_types=1);
 
 namespace Fbns\Client\Lite;
 
@@ -66,22 +60,16 @@ class ConnectRequestPacket extends BasePacket
 
     /**
      * Returns the protocol level.
-     *
-     * @return int
      */
-    public function getProtocolLevel()
+    public function getProtocolLevel(): int
     {
         return $this->protocolLevel;
     }
 
     /**
      * Sets the protocol level.
-     *
-     * @param int $value
-     *
-     * @throws \InvalidArgumentException
      */
-    public function setProtocolLevel($value)
+    public function setProtocolLevel(int $value): void
     {
         if ($value != 3) {
             throw new \InvalidArgumentException(sprintf('Unknown protocol level %d.', $value));
@@ -92,42 +80,32 @@ class ConnectRequestPacket extends BasePacket
 
     /**
      * Returns the payload.
-     *
-     * @return string
      */
-    public function getPayload()
+    public function getPayload(): string
     {
         return $this->payload;
     }
 
     /**
      * Sets the payload.
-     *
-     * @param string $value
      */
-    public function setPayload($value)
+    public function setPayload(string $value)
     {
         $this->payload = $value;
     }
 
     /**
      * Returns the flags.
-     *
-     * @return int
      */
-    public function getFlags()
+    public function getFlags(): int
     {
         return $this->flags;
     }
 
     /**
      * Sets the flags.
-     *
-     * @param int $value
-     *
-     * @throws \InvalidArgumentException
      */
-    public function setFlags($value)
+    public function setFlags(int $value)
     {
         if ($value > 255) {
             throw new \InvalidArgumentException(sprintf('Expected a flags lower than 255 but got %d.', $value));
@@ -138,22 +116,16 @@ class ConnectRequestPacket extends BasePacket
 
     /**
      * Returns the keep alive time in seconds.
-     *
-     * @return int
      */
-    public function getKeepAlive()
+    public function getKeepAlive(): int
     {
         return $this->keepAlive;
     }
 
     /**
      * Sets the keep alive time in seconds.
-     *
-     * @param int $value
-     *
-     * @throws \InvalidArgumentException
      */
-    public function setKeepAlive($value)
+    public function setKeepAlive(int $value): void
     {
         if ($value > 65535) {
             throw new \InvalidArgumentException(sprintf('Expected a keep alive time lower than 65535 but got %d.', $value));
@@ -164,22 +136,16 @@ class ConnectRequestPacket extends BasePacket
 
     /**
      * Returns the protocol name.
-     *
-     * @return string
      */
-    public function getProtocolName()
+    public function getProtocolName(): string
     {
         return $this->protocolName;
     }
 
     /**
      * Sets the protocol name.
-     *
-     * @param string $value
-     *
-     * @throws \InvalidArgumentException
      */
-    public function setProtocolName($value)
+    public function setProtocolName(string $value): void
     {
         $this->assertValidStringLength($value, false);
 

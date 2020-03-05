@@ -1,12 +1,6 @@
 <?php
 
-/*
- * This file is part of net-mqtt.
- *
- * Copyright (c) 2015 Sebastian Mößler code@binsoul.de
- *
- * This source file is subject to the MIT license.
- */
+declare(strict_types=1);
 
 namespace Fbns\Client\Lite;
 
@@ -14,9 +8,6 @@ use BinSoul\Net\Mqtt\Packet;
 use BinSoul\Net\Mqtt\Packet\BasePacket;
 use BinSoul\Net\Mqtt\PacketStream;
 
-/**
- * Represents the CONNACK packet.
- */
 class ConnectResponsePacket extends BasePacket
 {
     /** @var string[][] */
@@ -81,7 +72,7 @@ class ConnectResponsePacket extends BasePacket
         $data->writeByte($this->flags);
         $data->writeByte($this->returnCode);
 
-        if ($this->auth !== null && strlen($this->auth)) {
+        if ($this->auth !== null && $this->auth !== '') {
             $data->writeString($this->auth);
         }
 
@@ -93,40 +84,32 @@ class ConnectResponsePacket extends BasePacket
 
     /**
      * Returns the return code.
-     *
-     * @return int
      */
-    public function getReturnCode()
+    public function getReturnCode(): int
     {
         return $this->returnCode;
     }
 
     /**
      * Indicates if the connection was successful.
-     *
-     * @return bool
      */
-    public function isSuccess()
+    public function isSuccess(): bool
     {
         return $this->returnCode === 0;
     }
 
     /**
      * Indicates if the connection failed.
-     *
-     * @return bool
      */
-    public function isError()
+    public function isError(): bool
     {
         return $this->returnCode > 0;
     }
 
     /**
      * Returns a string representation of the returned error code.
-     *
-     * @return int
      */
-    public function getErrorName()
+    public function getErrorName(): string
     {
         if (isset(self::$returnCodes[$this->returnCode])) {
             return self::$returnCodes[$this->returnCode][0];
@@ -135,10 +118,7 @@ class ConnectResponsePacket extends BasePacket
         return 'Error '.$this->returnCode;
     }
 
-    /**
-     * @return string
-     */
-    public function getAuth()
+    public function getAuth(): string
     {
         return $this->auth;
     }

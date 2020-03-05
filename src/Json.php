@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Fbns\Client;
 
 class Json
@@ -7,11 +9,9 @@ class Json
     /**
      * Special decoder to keep big numbers on x86 PHP builds.
      *
-     * @param string $json
-     *
      * @return mixed
      */
-    public static function decode($json)
+    public static function decode(string $json)
     {
         $flags = 0;
         if (PHP_INT_SIZE === 4) {

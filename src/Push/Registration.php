@@ -1,35 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Fbns\Client\Push;
 
 use Fbns\Client\Json;
 
 class Registration
 {
-    /**
-     * @var string
-     */
+    /** @var string */
     private $json;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     private $packageName;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     private $token;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     private $error;
 
-    /**
-     * @param string $json
-     */
-    private function parseJson($json)
+    private function parseJson(string $json)
     {
         $data = Json::decode($json);
         $this->json = $json;
@@ -45,44 +36,27 @@ class Registration
         }
     }
 
-    /**
-     * Message constructor.
-     *
-     * @param string $json
-     */
-    public function __construct($json)
+    public function __construct(string $json)
     {
         $this->parseJson($json);
     }
 
-    /**
-     * @return string
-     */
-    public function __toString()
+    public function __toString(): string
     {
         return $this->json;
     }
 
-    /**
-     * @return string
-     */
-    public function getPackageName()
+    public function getPackageName(): string
     {
         return $this->packageName;
     }
 
-    /**
-     * @return string
-     */
-    public function getToken()
+    public function getToken(): string
     {
         return $this->token;
     }
 
-    /**
-     * @return string
-     */
-    public function getError()
+    public function getError(): string
     {
         return $this->error;
     }

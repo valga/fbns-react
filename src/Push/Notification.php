@@ -1,55 +1,38 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Fbns\Client\Push;
 
 use Fbns\Client\Json;
 
 class Notification
 {
-    /**
-     * @var string
-     */
+    /** @var string */
     private $json;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     private $token;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     private $connectionKey;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     private $packageName;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     private $collapseKey;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     private $payload;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     private $notificationId;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     private $isBuffered;
 
-    /**
-     * @param string $json
-     */
-    private function parseJson($json)
+    private function parseJson(string $json): void
     {
         $data = Json::decode($json);
         $this->json = $json;
@@ -77,76 +60,47 @@ class Notification
         }
     }
 
-    /**
-     * Message constructor.
-     *
-     * @param string $json
-     */
-    public function __construct($json)
+    public function __construct(string $json)
     {
         $this->parseJson($json);
     }
 
-    /**
-     * @return string
-     */
-    public function __toString()
+    public function __toString(): string
     {
         return $this->json;
     }
 
-    /**
-     * @return string
-     */
-    public function getToken()
+    public function getToken(): string
     {
         return $this->token;
     }
 
-    /**
-     * @return string
-     */
-    public function getConnectionKey()
+    public function getConnectionKey(): string
     {
         return $this->connectionKey;
     }
 
-    /**
-     * @return string
-     */
-    public function getPackageName()
+    public function getPackageName(): string
     {
         return $this->packageName;
     }
 
-    /**
-     * @return string
-     */
-    public function getCollapseKey()
+    public function getCollapseKey(): string
     {
         return $this->collapseKey;
     }
 
-    /**
-     * @return string
-     */
-    public function getPayload()
+    public function getPayload(): string
     {
         return $this->payload;
     }
 
-    /**
-     * @return string
-     */
-    public function getNotificationId()
+    public function getNotificationId(): string
     {
         return $this->notificationId;
     }
 
-    /**
-     * @return string
-     */
-    public function getIsBuffered()
+    public function getIsBuffered(): string
     {
         return $this->isBuffered;
     }

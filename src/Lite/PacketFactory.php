@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Fbns\Client\Lite;
 
 use BinSoul\Net\Mqtt\Exception\UnknownPacketTypeException;
@@ -7,16 +9,8 @@ use BinSoul\Net\Mqtt\Packet;
 use BinSoul\Net\Mqtt\PacketFactory as PacketFactoryInterface;
 use Fbns\Client\Common\PublishAckPacket;
 
-/**
- * Builds instances of the {@see Packet} interface.
- */
 class PacketFactory implements PacketFactoryInterface
 {
-    /**
-     * Map of packet types to packet classes.
-     *
-     * @var string[]
-     */
     private static $mapping = [
         Packet::TYPE_CONNECT => ConnectRequestPacket::class,
         Packet::TYPE_CONNACK => ConnectResponsePacket::class,

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Fbns\Client\Lite;
 
 use BinSoul\Net\Mqtt\ClientIdentifierGenerator;
@@ -8,9 +10,6 @@ use BinSoul\Net\Mqtt\Flow\OutgoingConnectFlow as BaseOutgoingConnectFlow;
 use BinSoul\Net\Mqtt\Packet;
 use BinSoul\Net\Mqtt\PacketFactory;
 
-/**
- * Represents a flow starting with an outgoing CONNECT packet.
- */
 class OutgoingConnectFlow extends BaseOutgoingConnectFlow
 {
     const PROTOCOL_LEVEL = 3;

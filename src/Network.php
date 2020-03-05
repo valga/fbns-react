@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Fbns\Client;
 
 use Fbns\Client\Network\NetworkSubtype;
