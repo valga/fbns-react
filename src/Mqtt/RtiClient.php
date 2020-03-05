@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Fbns\Mqtt;
 
 use BinSoul\Net\Mqtt\Client\React\ReactMqttClient;
-use BinSoul\Net\Mqtt\DefaultIdentifierGenerator;
 use BinSoul\Net\Mqtt\DefaultMessage;
 use BinSoul\Net\Mqtt\Message;
 use BinSoul\Net\Mqtt\StreamParser;
@@ -44,6 +43,9 @@ class RtiClient implements EventEmitterInterface
     /** @var TimerInterface */
     private $keepaliveTimer;
 
+    /** @var ResettableIdentifierGenerator */
+    private $identifierGenerator;
+
     public function __construct(
         LoopInterface $loop,
         ConnectorInterface $connector,
@@ -51,15 +53,15 @@ class RtiClient implements EventEmitterInterface
         TopicMapper $mapper)
     {
         $this->loop = $loop;
-        $identifierGenerator = new DefaultIdentifierGenerator();
+        $this->identifierGenerator = new ResettableIdentifierGenerator();
         $packetFactory = new PacketFactory();
         $this->mqttClient = new ReactMqttClient(
             $connector,
             $loop,
-            $identifierGenerator,
+            $this->identifierGenerator,
             new FlowFactory(
-                $identifierGenerator,
-                $identifierGenerator,
+                $this->identifierGenerator,
+                $this->identifierGenerator,
                 $packetFactory
             ),
             new StreamParser($packetFactory)
@@ -75,6 +77,7 @@ class RtiClient implements EventEmitterInterface
         $this->disconnect()
             ->then(function () use ($deferred, $host, $port, $connection, $timeout) {
                 $this->logger->info("Connecting to {$host}:{$port}...");
+                $this->identifierGenerator->resetPacketIdentifier();
                 $this->mqttClient->connect($host, $port, $connection, $timeout)
                     ->then(function (ConnectResponsePacket $responsePacket) use ($deferred) {
                         $this->emit('connect', [$responsePacket]);
