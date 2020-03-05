@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Fbns\Client\Push;
+namespace Fbns\Push;
 
-use Fbns\Client\Mqtt\DefaultTopicMapper;
-use Fbns\Client\Mqtt\TopicMapper;
+use Fbns\Mqtt\DefaultTopicMapper;
+use Fbns\Mqtt\TopicMapper;
 use Psr\Log\LoggerInterface;
 
 class PushTopics implements TopicMapper

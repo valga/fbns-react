@@ -17,7 +17,7 @@
     ],
     "autoload": {
         "psr-4": {
-            "Fbns\\Client\\": "src/"
+            "Fbns\\": "src/"
         }
     },
     "require": {

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Fbns\Client\Push;
+namespace Fbns\Push;
 
-use Fbns\Client\Json;
+use Fbns\Json;
 
 class Registration
 {

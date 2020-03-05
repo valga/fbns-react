@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Fbns\Client;
+namespace Fbns;
 
 use BinSoul\Net\Mqtt\Message;
 use Evenement\EventEmitterInterface;
 use Evenement\EventEmitterTrait;
-use Fbns\Client\Endpoint\PushEndpoint;
-use Fbns\Client\Lite\ConnectResponsePacket;
-use Fbns\Client\Mqtt\FbnsClient;
-use Fbns\Client\Mqtt\FbnsConnection;
-use Fbns\Client\Mqtt\QosLevel;
-use Fbns\Client\Push\Notification;
-use Fbns\Client\Push\PushTopics;
-use Fbns\Client\Push\Registration;
+use Fbns\Endpoint\PushEndpoint;
+use Fbns\Lite\ConnectResponsePacket;
+use Fbns\Mqtt\FbnsClient;
+use Fbns\Mqtt\FbnsConnection;
+use Fbns\Mqtt\QosLevel;
+use Fbns\Push\Notification;
+use Fbns\Push\PushTopics;
+use Fbns\Push\Registration;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use React\EventLoop\LoopInterface;

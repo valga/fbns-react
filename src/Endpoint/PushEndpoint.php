@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Fbns\Client\Endpoint;
+namespace Fbns\Endpoint;
 
-use Fbns\Client\Endpoint;
+use Fbns\Endpoint;
 
 class PushEndpoint implements Endpoint
 {

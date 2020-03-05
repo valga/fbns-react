@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Fbns\Client;
+namespace Fbns;
 
 interface Endpoint
 {

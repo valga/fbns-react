@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Fbns\Client\Network;
+namespace Fbns\Network;
 
-use Fbns\Client\Network;
+use Fbns\Network;
 
 class Lte implements Network
 {

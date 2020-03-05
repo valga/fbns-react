@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Fbns\Client\Mqtt;
+namespace Fbns\Mqtt;
 
 use BinSoul\Net\Mqtt\Message;
-use Fbns\Client\Auth;
-use Fbns\Client\Connection;
-use Fbns\Client\Device;
-use Fbns\Client\Endpoint;
-use Fbns\Client\Network;
-use Fbns\Client\Proto\ClientInfo;
-use Fbns\Client\Proto\Connect;
-use Fbns\Client\Thrift\Compact\Writer;
+use Fbns\Auth;
+use Fbns\Connection;
+use Fbns\Device;
+use Fbns\Endpoint;
+use Fbns\Network;
+use Fbns\Proto\ClientInfo;
+use Fbns\Proto\Connect;
+use Fbns\Thrift\Compact\Writer;
 
 class FbnsConnection implements Connection
 {

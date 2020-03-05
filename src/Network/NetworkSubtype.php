@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Fbns\Client\Network;
+namespace Fbns\Network;
 
 class NetworkSubtype
 {

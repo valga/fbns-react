@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Fbns\Client\Proto;
+namespace Fbns\Proto;
 
-use Fbns\Client\Mqtt\PublishFormat;
-use Fbns\Client\Thrift\Compact\Types;
-use Fbns\Client\Thrift\Field;
-use Fbns\Client\Thrift\Series;
-use Fbns\Client\Thrift\Struct;
+use Fbns\Mqtt\PublishFormat;
+use Fbns\Thrift\Compact\Types;
+use Fbns\Thrift\Field;
+use Fbns\Thrift\Series;
+use Fbns\Thrift\Struct;
 
 class ClientInfo implements \JsonSerializable
 {

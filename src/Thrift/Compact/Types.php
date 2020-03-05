@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Fbns\Client\Thrift\Compact;
+namespace Fbns\Thrift\Compact;
 
 /**
  * @see https://thrift.apache.org/

@@ -17,10 +17,10 @@ composer require valga/fbns-react
 ```php
 // Set up a Push client.
 $loop = \React\EventLoop\Factory::create();
-$auth = new \Fbns\Client\Auth\DeviceAuth();
-$device = new \Fbns\Client\Device\DefaultDevice(USER_AGENT);
-$network = new \Fbns\Client\Network\Wifi();
-$client = new \Fbns\Client\PushClient($loop, $auth, $device, $network, $logger);
+$auth = new \Fbns\Auth\DeviceAuth();
+$device = new \Fbns\Device\DefaultDevice(USER_AGENT);
+$network = new \Fbns\Network\Wifi();
+$client = new \Fbns\PushClient($loop, $auth, $device, $network, $logger);
 
 // Read saved credentials from the storage.
 try {
@@ -40,11 +40,11 @@ $client
         
         // Register the application.
         $client->register(PACKAGE_NAME, APPLICATION_ID)
-            ->then(static function (\Fbns\Client\Push\Registration $registration) use ($app) {
+            ->then(static function (\Fbns\Push\Registration $registration) use ($app) {
                 $app->registerPushToken($registration->getToken());
             });
     })
-    ->on('push', static function (\Fbns\Client\Push\Notification $message) use ($app) {
+    ->on('push', static function (\Fbns\Push\Notification $message) use ($app) {
         // Handle received notification payload.
         $app->handlePushNotification($message->getPayload());
     });
@@ -71,7 +71,7 @@ $logger = new \Monolog\Logger('push');
 $logger->pushHandler(new \Monolog\Handler\StreamHandler('php://stdout', \Monolog\Logger::INFO));
 
 // Set up a Push client.
-$client = new \Fbns\Client\PushClient($loop, $auth, $device, $network, $logger, $connector);
+$client = new \Fbns\PushClient($loop, $auth, $device, $network, $logger, $connector);
 
 // Persistence.
 $client->on('disconnect', static function () {

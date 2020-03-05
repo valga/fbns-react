@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Fbns\Client\Lite;
+namespace Fbns\Lite;
 
 use BinSoul\Net\Mqtt\Exception\UnknownPacketTypeException;
 use BinSoul\Net\Mqtt\Packet;
 use BinSoul\Net\Mqtt\PacketFactory as PacketFactoryInterface;
-use Fbns\Client\Common\PublishAckPacket;
+use Fbns\Common\PublishAckPacket;
 
 class PacketFactory implements PacketFactoryInterface
 {

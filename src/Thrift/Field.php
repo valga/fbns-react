@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Fbns\Client\Thrift;
+namespace Fbns\Thrift;
 
 class Field
 {

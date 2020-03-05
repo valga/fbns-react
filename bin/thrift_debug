@@ -23,7 +23,7 @@ if ($data === false) {
 }
 
 try {
-    $debugger = new \Fbns\Client\Thrift\Utils\Debug($data);
+    $debugger = new \Fbns\Thrift\Utils\Debug($data);
     $debugger();
 } catch (\Exception $e) {
     fwrite(STDERR, $e->getMessage().PHP_EOL);

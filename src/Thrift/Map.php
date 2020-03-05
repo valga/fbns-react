@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Fbns\Client\Thrift;
+namespace Fbns\Thrift;
 
-use Fbns\Client\Thrift\Compact\Types;
+use Fbns\Thrift\Compact\Types;
 
 class Map extends Field
 {

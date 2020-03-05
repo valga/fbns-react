@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Fbns\Client;
+namespace Fbns;
 
-use Fbns\Client\Network\NetworkSubtype;
-use Fbns\Client\Network\NetworkType;
+use Fbns\Network\NetworkSubtype;
+use Fbns\Network\NetworkType;
 
 interface Network
 {

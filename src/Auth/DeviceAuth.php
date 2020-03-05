@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Fbns\Client\Auth;
+namespace Fbns\Auth;
 
-use Fbns\Client\Auth;
-use Fbns\Client\Json;
+use Fbns\Auth;
+use Fbns\Json;
 use Ramsey\Uuid\Uuid;
 
 class DeviceAuth implements Auth, \JsonSerializable

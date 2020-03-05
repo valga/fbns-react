@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Fbns\Client\Mqtt;
+namespace Fbns\Mqtt;
 
 use BinSoul\Net\Mqtt\Client\React\ReactMqttClient;
 use BinSoul\Net\Mqtt\DefaultIdentifierGenerator;
@@ -11,10 +11,10 @@ use BinSoul\Net\Mqtt\Message;
 use BinSoul\Net\Mqtt\StreamParser;
 use Evenement\EventEmitterInterface;
 use Evenement\EventEmitterTrait;
-use Fbns\Client\Connection;
-use Fbns\Client\Lite\ConnectResponsePacket;
-use Fbns\Client\Lite\FlowFactory;
-use Fbns\Client\Lite\PacketFactory;
+use Fbns\Connection;
+use Fbns\Lite\ConnectResponsePacket;
+use Fbns\Lite\FlowFactory;
+use Fbns\Lite\PacketFactory;
 use Psr\Log\LoggerInterface;
 use React\EventLoop\LoopInterface;
 use React\EventLoop\TimerInterface;

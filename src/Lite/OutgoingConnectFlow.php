@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Fbns\Client\Lite;
+namespace Fbns\Lite;
 
 use BinSoul\Net\Mqtt\ClientIdentifierGenerator;
 use BinSoul\Net\Mqtt\Connection;

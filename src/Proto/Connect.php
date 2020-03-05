@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Fbns\Client\Proto;
+namespace Fbns\Proto;
 
-use Fbns\Client\Thrift\Compact\Types;
-use Fbns\Client\Thrift\Field;
-use Fbns\Client\Thrift\Map;
-use Fbns\Client\Thrift\Series;
-use Fbns\Client\Thrift\Struct;
+use Fbns\Thrift\Compact\Types;
+use Fbns\Thrift\Field;
+use Fbns\Thrift\Map;
+use Fbns\Thrift\Series;
+use Fbns\Thrift\Struct;
 
 class Connect implements \JsonSerializable
 {

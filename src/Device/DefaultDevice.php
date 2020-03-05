@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Fbns\Client\Device;
+namespace Fbns\Device;
 
-use Fbns\Client\Device;
+use Fbns\Device;
 
 class DefaultDevice implements Device
 {
