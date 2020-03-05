@@ -9,8 +9,9 @@ use Fbns\Thrift\Field;
 use Fbns\Thrift\Map;
 use Fbns\Thrift\Series;
 use Fbns\Thrift\Struct;
+use Fbns\Thrift\StructSerializable;
 
-class Connect implements \JsonSerializable
+class Connect implements StructSerializable, \JsonSerializable
 {
     /** @var string */
     public $clientIdentifier;

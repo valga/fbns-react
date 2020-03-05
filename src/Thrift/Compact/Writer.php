@@ -8,6 +8,7 @@ use Fbns\Thrift\Field;
 use Fbns\Thrift\Map;
 use Fbns\Thrift\Series;
 use Fbns\Thrift\Struct;
+use Fbns\Thrift\StructSerializable;
 use SplStack;
 
 /**
@@ -32,14 +33,14 @@ class Writer
         $this->stack = new SplStack();
     }
 
-    public function __invoke(Struct $struct): string
+    public function __invoke(StructSerializable $object): string
     {
         $this->buffer->clear();
         while (!$this->stack->isEmpty()) {
             $this->stack->pop();
         }
         $this->field = 0;
-        $this->writeStruct($struct);
+        $this->writeStruct($object->toStruct());
 
         return (string) $this->buffer;
     }

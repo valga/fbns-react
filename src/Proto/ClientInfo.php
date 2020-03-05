@@ -9,8 +9,9 @@ use Fbns\Thrift\Compact\Types;
 use Fbns\Thrift\Field;
 use Fbns\Thrift\Series;
 use Fbns\Thrift\Struct;
+use Fbns\Thrift\StructSerializable;
 
-class ClientInfo implements \JsonSerializable
+class ClientInfo implements StructSerializable, \JsonSerializable
 {
     /** @var int */
     public $userId;

@@ -7,8 +7,9 @@ namespace Fbns\Proto;
 use Fbns\Thrift\Compact\Types;
 use Fbns\Thrift\Field;
 use Fbns\Thrift\Struct;
+use Fbns\Thrift\StructSerializable;
 
-class GetIrisDiffs
+class GetIrisDiffs implements StructSerializable
 {
     /** @var string */
     public $syncToken;

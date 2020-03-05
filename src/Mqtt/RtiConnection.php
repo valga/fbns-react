@@ -81,7 +81,7 @@ class RtiConnection implements Connection
         $connect = $this->buildConnect();
         $writer = new Writer();
 
-        return $writer($connect->toStruct());
+        return $writer($connect);
     }
 
     public function getProtocol(): int
