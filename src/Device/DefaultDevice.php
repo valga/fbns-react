@@ -21,14 +21,19 @@ class DefaultDevice implements Device
         return $this->userAgent;
     }
 
-    public function uptime(): int
+    public function uptime()
     {
         if (function_exists('hrtime')) {
             [$secs, $nanos] = hrtime();
+            $millies = (int) ($nanos / 1000000);
+            if (PHP_INT_SIZE === 4) {
+                return sprintf('%d%03d', $secs, $millies);
+            }
 
-            return $secs * 1000 + (int) ($nanos / 1000000);
+            return $secs * 1000 + $millies;
         }
+        $timeSinceLastMonday = (int) ((microtime(true) - strtotime('Last Monday')) * 1000);
 
-        return (int) ((microtime(true) - strtotime('Last Monday')) * 1000);
+        return PHP_INT_SIZE === 4 ? (string) $timeSinceLastMonday : $timeSinceLastMonday;
     }
 }

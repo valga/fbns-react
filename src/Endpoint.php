@@ -6,9 +6,15 @@ namespace Fbns;
 
 interface Endpoint
 {
-    public function appId(): int;
+    /**
+     * @return int|string
+     */
+    public function appId();
 
-    public function capabilities(): int;
+    /**
+     * @return int|string
+     */
+    public function capabilities();
 
     public function noAutomaticForeground(): bool;
 
@@ -18,7 +24,10 @@ interface Endpoint
 
     public function subscribeTopics(): ?array;
 
-    public function loggerUserId(): ?int;
+    /**
+     * @return int|string|null
+     */
+    public function loggerUserId();
 
     public function appSpecificInfo(): ?array;
 

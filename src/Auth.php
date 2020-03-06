@@ -10,7 +10,10 @@ interface Auth
 
     public function getClientType(): string;
 
-    public function getUserId(): int;
+    /**
+     * @return int|string
+     */
+    public function getUserId();
 
     public function getPassword(): string;
 

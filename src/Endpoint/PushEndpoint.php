@@ -8,15 +8,15 @@ use Fbns\Endpoint;
 
 class PushEndpoint implements Endpoint
 {
-    private const APP_ID = 567310203415052;
+    private const APP_ID = '567310203415052';
     private const CAPABILITIES = 128;
 
-    public function appId(): int
+    public function appId()
     {
         return self::APP_ID;
     }
 
-    public function capabilities(): int
+    public function capabilities()
     {
         return self::CAPABILITIES;
     }
@@ -41,7 +41,7 @@ class PushEndpoint implements Endpoint
         return [76, 80, 231];
     }
 
-    public function loggerUserId(): ?int
+    public function loggerUserId()
     {
         return -1;
     }

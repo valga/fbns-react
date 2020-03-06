@@ -13,6 +13,8 @@ interface Device
 
     /**
      * Get device uptime in milliseconds.
+     *
+     * @return int|string
      */
-    public function uptime(): int;
+    public function uptime();
 }
