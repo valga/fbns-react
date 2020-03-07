@@ -121,6 +121,12 @@ class Writer
             case Types::I64:
                 $this->buffer->writeVarint($this->toZigZag($value, 64));
                 break;
+            case Types::FLOAT:
+                $this->buffer->writeFloatingPoint($value, 'G');
+                break;
+            case Types::DOUBLE:
+                $this->buffer->writeFloatingPoint($value, 'E');
+                break;
             case Types::BINARY:
                 $this->buffer->writeVarint(strlen($value));
                 $this->buffer->writeBinary($value);

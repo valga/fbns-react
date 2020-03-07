@@ -140,6 +140,10 @@ class Reader
             case Types::I32:
             case Types::I64:
                 return $this->fromZigZag($this->buffer->readVarint());
+            case Types::FLOAT:
+                return $this->buffer->readFloatingPoint('G', 4);
+            case Types::DOUBLE:
+                return $this->buffer->readFloatingPoint('E', 8);
             case Types::BINARY:
                 return $this->buffer->readString($this->buffer->readVarint());
             default:

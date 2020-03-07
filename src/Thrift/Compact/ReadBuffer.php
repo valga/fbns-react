@@ -88,4 +88,14 @@ class ReadBuffer
 
         return $result;
     }
+
+    public function readFloatingPoint(string $format, int $bytes): float
+    {
+        $binary = substr($this->buffer, $this->position, $bytes);
+        $this->position += $bytes;
+
+        $data = unpack($format, $binary);
+
+        return $data[1];
+    }
 }

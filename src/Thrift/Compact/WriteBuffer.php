@@ -65,4 +65,9 @@ class WriteBuffer
             $number >>= 7;
         }
     }
+
+    public function writeFloatingPoint(float $number, string $format): void
+    {
+        $this->buffer .= pack($format, $number);
+    }
 }
