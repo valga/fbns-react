@@ -7,11 +7,10 @@ namespace Fbns\Thrift\Compact;
 use Fbns\Thrift\Field;
 use Fbns\Thrift\Map;
 use Fbns\Thrift\Series;
+use Fbns\Thrift\Set;
 use Fbns\Thrift\Struct;
 
 /**
- * WARNING: This implementation is not complete.
- *
  * @see https://thrift.apache.org/
  */
 class Reader
@@ -73,19 +72,33 @@ class Reader
         return [$nextField, $type];
     }
 
-    private function readList(): Series
+    private function readCollectionHeader(): array
     {
         $sizeAndType = $this->buffer->readUnsignedByte();
         $size = $sizeAndType >> 4;
-        $listType = $sizeAndType & 0x0f;
+        $itemType = $sizeAndType & 0x0f;
         if ($size === 0x0f) {
             $size = $this->buffer->readVarint();
         }
 
-        return new Series($listType, $this->readListItems($size, $listType));
+        return [$size, $itemType];
     }
 
-    private function readListItems(int $size, int $type): \Generator
+    private function readList(): Series
+    {
+        [$size, $itemType] = $this->readCollectionHeader();
+
+        return new Series($itemType, $this->readCollectionItems($size, $itemType));
+    }
+
+    private function readSet(): Set
+    {
+        [$size, $itemType] = $this->readCollectionHeader();
+
+        return new Set($itemType, $this->readCollectionItems($size, $itemType));
+    }
+
+    private function readCollectionItems(int $size, int $type): \Generator
     {
         for ($i = 0; $i < $size; $i++) {
             yield $this->readValue($type);
@@ -129,6 +142,8 @@ class Reader
                 return $this->readStruct();
             case Types::LIST:
                 return $this->readList();
+            case Types::SET:
+                return $this->readSet();
             case Types::MAP:
                 return $this->readMap();
             case Types::TRUE:

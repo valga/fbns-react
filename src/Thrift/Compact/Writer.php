@@ -7,12 +7,11 @@ namespace Fbns\Thrift\Compact;
 use Fbns\Thrift\Field;
 use Fbns\Thrift\Map;
 use Fbns\Thrift\Series;
+use Fbns\Thrift\Set;
 use Fbns\Thrift\Struct;
 use Fbns\Thrift\StructSerializable;
 
 /**
- * WARNING: This implementation is not complete.
- *
  * @see https://thrift.apache.org/
  */
 class Writer
@@ -79,6 +78,7 @@ class Writer
             case Types::STRUCT:
             case Types::LIST:
             case Types::MAP:
+            case Types::SET:
                 $this->writeValue($type, $value);
                 break;
             default:
@@ -98,6 +98,10 @@ class Writer
                 break;
             case Types::LIST:
                 /* @var Series $value */
+                $this->writeList($value->itemType(), $value->value());
+                break;
+            case Types::SET:
+                /* @var Set $value */
                 $this->writeList($value->itemType(), $value->value());
                 break;
             case Types::MAP:
