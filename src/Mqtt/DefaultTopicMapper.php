@@ -39,6 +39,10 @@ class DefaultTopicMapper implements TopicMapper
 
     public function unmap(string $id): string
     {
+        if ($id !== '' && $id[0] === '/') {
+            // There is no need to unmap topic that starts from slash.
+            return $id;
+        }
         if (!isset($this->reversed[$id])) {
             $this->logger->debug("Unknown topic ID '{$id}'.");
 
