@@ -161,7 +161,15 @@ class Reader
         if (PHP_INT_SIZE === 4) {
             $n = gmp_init($n, 10);
         }
-        $result = ($n >> 1) ^ -($n & 1);
+        if (PHP_INT_SIZE === 8 && $n < 0) {
+            $n &= 0x7FFFFFFFFFFFFFFF;
+            $result = (($n >> 1) | (1 << 62)) ^ -($n & 1);
+            if ($n & 1) {
+                $result |= 1 << 63;
+            }
+        } else {
+            $result = ($n >> 1) ^ -($n & 1);
+        }
         if (PHP_INT_SIZE === 4) {
             $result = gmp_strval($result, 10);
         }

@@ -45,6 +45,13 @@ class WriteBuffer
         if (PHP_INT_SIZE === 4) {
             $number = gmp_init($number, 10);
         }
+        if (PHP_INT_SIZE === 8 && $number < 0) {
+            $byte = ($number & 0xff) | 0x80;
+            $this->buffer .= chr($byte);
+            $number &= 0x7FFFFFFFFFFFFFFF;
+            $number >>= 7;
+            $number |= 1 << 56;
+        }
         while (true) {
             $byte = $number & (~0x7f);
             if (PHP_INT_SIZE === 4) {
