@@ -3,7 +3,10 @@
 return \PhpCsFixer\Config::create()
     ->setFinder(
         \PhpCsFixer\Finder::create()
-            ->in('src')
+            ->in([
+                'src',
+                'tests',
+            ])
     )
     ->setRules([
         '@Symfony'                            => true,

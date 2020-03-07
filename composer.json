@@ -23,6 +23,11 @@
             "Fbns\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Fbns\\Tests\\": "tests/"
+        }
+    },
     "require": {
         "php": "^7.4",
         "ext-json": "*",
@@ -39,13 +44,15 @@
     },
     "require-dev": {
         "monolog/monolog": "~1.23",
-        "friendsofphp/php-cs-fixer": "^2.16"
+        "friendsofphp/php-cs-fixer": "^2.16",
+        "phpunit/phpunit": "^8.5.2"
     },
     "suggest": {
         "ext-event": "For more efficient event loop implementation.",
         "ext-gmp": "To be able to run this code on x86 PHP builds."
     },
     "scripts": {
-        "codestyle": "php-cs-fixer fix --config=.php_cs"
+        "codestyle": "php-cs-fixer fix --config=.php_cs",
+        "test": "phpunit tests"
     }
 }
