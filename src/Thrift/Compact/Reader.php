@@ -8,7 +8,6 @@ use Fbns\Thrift\Field;
 use Fbns\Thrift\Map;
 use Fbns\Thrift\Series;
 use Fbns\Thrift\Struct;
-use SplStack;
 
 /**
  * WARNING: This implementation is not complete.
@@ -17,116 +16,121 @@ use SplStack;
  */
 class Reader
 {
-    /** @var SplStack */
-    private $stack;
-
-    /** @var int */
-    private $field;
-
     /** @var ReadBuffer */
     private $buffer;
 
-    public function __construct(string $buffer = '')
+    public function __construct(string $buffer)
     {
-        $this->stack = new SplStack();
         $this->buffer = new ReadBuffer($buffer);
     }
 
     public function __invoke(): Struct
     {
         $this->buffer->rewind();
-        $this->field = 0;
-        while (!$this->stack->isEmpty()) {
-            $this->stack->pop();
-        }
 
-        return new Struct($this->readStruct());
+        return $this->readStruct();
     }
 
-    private function readStruct(): \Generator
+    private function readStruct(): Struct
     {
-        while ($this->buffer->isEmpty()) {
-            $type = $this->readField();
-            switch ($type) {
-                case Types::STRUCT:
-                    $field = $this->field;
-                    $this->stack->push($this->field);
-                    $this->field = 0;
-                    yield $field => new Struct($this->readStruct());
-                    break;
-                case Types::STOP:
-                    if (!$this->stack->isEmpty()) {
-                        $this->field = $this->stack->pop();
-                    }
+        return new Struct($this->readStructFields());
+    }
 
+    private function readStructFields(): \Generator
+    {
+        $field = 0;
+        while (!$this->buffer->isEmpty()) {
+            [$field, $type] = $this->readNextField($field);
+            switch ($type) {
+                case Types::STOP:
                     return;
-                case Types::LIST:
-                    $sizeAndType = $this->buffer->readUnsignedByte();
-                    $size = $sizeAndType >> 4;
-                    $listType = $sizeAndType & 0x0f;
-                    if ($size === 0x0f) {
-                        $size = $this->buffer->readVarint();
-                    }
-                    yield $this->field => new Series($listType, $this->readList($size, $listType));
-                    break;
                 case Types::TRUE:
                 case Types::FALSE:
-                    yield $this->field => new Field($type, $type === Types::TRUE);
-                    break;
-                case Types::BYTE:
-                    yield $this->field => new Field($type, $this->buffer->readSignedByte());
-                    break;
-                case Types::I16:
-                case Types::I32:
-                case Types::I64:
-                    yield $this->field => new Field($type, $this->fromZigZag($this->buffer->readVarint()));
-                    break;
-                case Types::BINARY:
-                    yield $this->field => new Field($type, $this->buffer->readString($this->buffer->readVarint()));
-                    break;
-                case Types::MAP:
-                    $size = $this->buffer->readVarint();
-                    $types = $this->buffer->readUnsignedByte();
-                    $keyType = $types >> 4;
-                    $valueType = $types & 0x0f;
-                    yield $this->field => new Map($keyType, $valueType, $this->readMap($size, $keyType, $valueType));
+                    // Boolean fields are inlined, so there is no need to read them.
+                    yield $field => new Field(Types::TRUE, $type === Types::TRUE);
                     break;
                 default:
-                    throw new \DomainException("Unsupported field type {$type}.");
+                    yield $field => $this->readWrappedValue($type);
             }
         }
     }
 
-    private function readField(): int
+    private function readNextField(int $currentField): array
     {
         $typeAndDelta = $this->buffer->readUnsignedByte();
         if ($typeAndDelta === Types::STOP) {
-            return Types::STOP;
+            return [$currentField, Types::STOP];
         }
         $delta = $typeAndDelta >> 4;
+        $nextField = $currentField;
         if ($delta === 0) {
-            $this->field = $this->fromZigZag($this->buffer->readVarint());
+            $nextField = $this->fromZigZag($this->buffer->readVarint());
         } else {
-            $this->field += $delta;
+            $nextField += $delta;
         }
         $type = $typeAndDelta & 0x0f;
 
-        return $type;
+        return [$nextField, $type];
     }
 
-    private function readList(int $size, int $type): \Generator
+    private function readList(): Series
+    {
+        $sizeAndType = $this->buffer->readUnsignedByte();
+        $size = $sizeAndType >> 4;
+        $listType = $sizeAndType & 0x0f;
+        if ($size === 0x0f) {
+            $size = $this->buffer->readVarint();
+        }
+
+        return new Series($listType, $this->readListItems($size, $listType));
+    }
+
+    private function readListItems(int $size, int $type): \Generator
     {
         for ($i = 0; $i < $size; $i++) {
-            yield $this->readPrimitive($type);
+            yield $this->readValue($type);
         }
+    }
+
+    private function readMap(): Map
+    {
+        $size = $this->buffer->readVarint();
+        $types = $this->buffer->readUnsignedByte();
+        $keyType = $types >> 4;
+        $valueType = $types & 0x0f;
+
+        return new Map($keyType, $valueType, $this->readMapItems($size, $keyType, $valueType));
+    }
+
+    private function readMapItems(int $size, int $keyType, int $valueType): \Generator
+    {
+        for ($i = 0; $i < $size; $i++) {
+            yield $this->readValue($keyType) => $this->readValue($valueType);
+        }
+    }
+
+    private function readWrappedValue(int $type): Field
+    {
+        $result = $this->readValue($type);
+        if ($result instanceof Field) {
+            return $result;
+        }
+
+        return new Field($type, $result);
     }
 
     /**
      * @return mixed
      */
-    private function readPrimitive(int $type)
+    private function readValue(int $type)
     {
         switch ($type) {
+            case Types::STRUCT:
+                return $this->readStruct();
+            case Types::LIST:
+                return $this->readList();
+            case Types::MAP:
+                return $this->readMap();
             case Types::TRUE:
             case Types::FALSE:
                 return $this->buffer->readSignedByte() === Types::TRUE;
@@ -139,14 +143,7 @@ class Reader
             case Types::BINARY:
                 return $this->buffer->readString($this->buffer->readVarint());
             default:
-                throw new \DomainException("Unsupported primitive type {$type}.");
-        }
-    }
-
-    private function readMap(int $size, int $keyType, int $valueType): \Generator
-    {
-        for ($i = 0; $i < $size; $i++) {
-            yield $this->readPrimitive($keyType) => $this->readPrimitive($valueType);
+                throw new \DomainException("Unsupported type {$type}.");
         }
     }
 

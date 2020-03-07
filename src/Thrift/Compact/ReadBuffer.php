@@ -32,7 +32,7 @@ class ReadBuffer
 
     public function isEmpty(): bool
     {
-        return $this->position < $this->length;
+        return $this->position >= $this->length;
     }
 
     public function readSignedByte(): int
