@@ -9,7 +9,6 @@ use Fbns\Thrift\Map;
 use Fbns\Thrift\Series;
 use Fbns\Thrift\Struct;
 use Fbns\Thrift\StructSerializable;
-use SplStack;
 
 /**
  * WARNING: This implementation is not complete.
@@ -21,25 +20,14 @@ class Writer
     /** @var WriteBuffer */
     private $buffer;
 
-    /** @var int */
-    private $field;
-
-    /** @var SplStack */
-    private $stack;
-
     public function __construct()
     {
         $this->buffer = new WriteBuffer();
-        $this->stack = new SplStack();
     }
 
     public function __invoke(StructSerializable $object): string
     {
         $this->buffer->clear();
-        while (!$this->stack->isEmpty()) {
-            $this->stack->pop();
-        }
-        $this->field = 0;
         $this->writeStruct($object->toStruct());
 
         return (string) $this->buffer;
@@ -47,61 +35,76 @@ class Writer
 
     private function writeStruct(Struct $struct): void
     {
+        $previousId = 0;
+
         /** @var Field $field */
-        foreach ($struct->value() as $idx => $field) {
+        foreach ($struct->value() as $id => $field) {
             $value = $field->value();
             if ($value === null) {
                 continue;
             }
+
             $type = $field->type();
-            switch (true) {
-                case $field instanceof Struct:
-                    $this->writeField($idx, $type);
-                    $this->stack[] = $this->field;
-                    $this->field = 0;
-                    $this->writeStruct($field);
-                    break;
-                case $field instanceof Series:
-                    $this->writeField($idx, $type);
-                    $this->writeList($field->itemType(), $field->value());
-                    break;
-                case $field instanceof Map:
-                    $this->writeField($idx, $type);
-                    $this->writeMap($field->keyType(), $field->valueType(), $field->value());
-                    break;
-                case $type === Types::TRUE || $type === Types::FALSE:
-                    $this->writeField($idx, $value ? Types::TRUE : Types::FALSE);
+            switch ($type) {
+                case Types::TRUE:
+                case Types::FALSE:
+                    // Boolean fields are inlined, so we have to write them without value.
+                    $this->writeField($id, $value ? Types::TRUE : Types::FALSE, $previousId);
                     break;
                 default:
-                    $this->writeField($idx, $type);
-                    $this->writePrimitive($field->type(), $value);
+                    $this->writeField($id, $type, $previousId);
+                    $this->unwrapAndWriteValue($field);
             }
+
+            $previousId = $id;
         }
 
         $this->buffer->writeByte(Types::STOP);
-        if (!$this->stack->isEmpty()) {
-            $this->field = $this->stack->pop();
-        }
     }
 
-    private function writeField(int $field, int $type): void
+    private function writeField(int $field, int $type, int $currentField): void
     {
-        $delta = $field - $this->field;
+        $delta = $field - $currentField;
         if ((0 < $delta) && ($delta <= 15)) {
             $this->buffer->writeByte(($delta << 4) | $type);
         } else {
             $this->buffer->writeByte($type);
             $this->buffer->writeVarint($this->toZigZag($field, 16));
         }
-        $this->field = $field;
+    }
+
+    private function unwrapAndWriteValue(Field $value): void
+    {
+        $type = $value->type();
+        switch ($type) {
+            case Types::STRUCT:
+            case Types::LIST:
+            case Types::MAP:
+                $this->writeValue($type, $value);
+                break;
+            default:
+                $this->writeValue($type, $value->value());
+        }
     }
 
     /**
      * @param mixed $value
      */
-    private function writePrimitive(int $type, $value): void
+    private function writeValue(int $type, $value): void
     {
         switch ($type) {
+            case Types::STRUCT:
+                /* @var Struct $value */
+                $this->writeStruct($value);
+                break;
+            case Types::LIST:
+                /* @var Series $value */
+                $this->writeList($value->itemType(), $value->value());
+                break;
+            case Types::MAP:
+                /* @var Map $value */
+                $this->writeMap($value->keyType(), $value->valueType(), $value->value());
+                break;
             case Types::TRUE:
             case Types::FALSE:
                 $this->buffer->writeByte($value ? Types::TRUE : Types::FALSE);
@@ -127,9 +130,9 @@ class Writer
         }
     }
 
-    private function writeList(int $type, array $list): void
+    private function writeList(int $type, iterable $list): void
     {
-        $size = count($list);
+        $size = $this->countIterable($list);
         if ($size < 0x0f) {
             $this->buffer->writeByte(($size << 4) | $type);
         } else {
@@ -138,17 +141,19 @@ class Writer
         }
 
         foreach ($list as $value) {
-            $this->writePrimitive($type, $value);
+            $this->writeValue($type, $value);
         }
     }
 
-    private function writeMap(int $keyType, int $valueType, array $map): void
+    private function writeMap(int $keyType, int $valueType, iterable $map): void
     {
-        $this->buffer->writeVarint(count($map));
+        $size = $this->countIterable($map);
+        $this->buffer->writeVarint($size);
         $this->buffer->writeByte(($keyType << 4) | $valueType);
+
         foreach ($map as $key => $value) {
-            $this->writePrimitive($keyType, $key);
-            $this->writePrimitive($valueType, $value);
+            $this->writeValue($keyType, $key);
+            $this->writeValue($valueType, $value);
         }
     }
 
@@ -168,5 +173,22 @@ class Writer
         }
 
         return $result;
+    }
+
+    private function countIterable(iterable $collection): int
+    {
+        switch (true) {
+            case is_array($collection):
+                return count($collection);
+            case $collection instanceof \Countable:
+                return $collection->count();
+            default:
+                $count = 0;
+                foreach ($collection as $_) {
+                    $count++;
+                }
+
+                return $count;
+        }
     }
 }
