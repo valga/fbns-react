@@ -37,7 +37,6 @@ class Writer
     {
         $previousId = 0;
 
-        /** @var Field $field */
         foreach ($struct->value() as $id => $field) {
             $value = $field->value();
             if ($value === null) {

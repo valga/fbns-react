@@ -14,7 +14,7 @@ class Map extends Field
     /** @var int */
     private $valueType;
 
-    public function __construct(int $keyType, int $valueType, $value)
+    public function __construct(int $keyType, int $valueType, ?iterable $value)
     {
         $this->keyType = $keyType;
         $this->valueType = $valueType;

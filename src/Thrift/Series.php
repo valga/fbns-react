@@ -11,7 +11,7 @@ class Series extends Field
     /** @var int */
     private $itemType;
 
-    public function __construct(int $itemType, $value)
+    public function __construct(int $itemType, ?iterable $value)
     {
         $this->itemType = $itemType;
         parent::__construct(Types::LIST, $value);
