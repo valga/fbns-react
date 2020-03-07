@@ -22,9 +22,9 @@ if ($data === false) {
     exit(1);
 }
 
+$debugger = new \Fbns\Thrift\Utils\Debug();
 try {
-    $debugger = new \Fbns\Thrift\Utils\Debug($data);
-    $debugger();
+    $debugger($data);
 } catch (\Exception $e) {
     fwrite(STDERR, $e->getMessage().PHP_EOL);
 

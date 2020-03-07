@@ -14,17 +14,9 @@ class Debug
 {
     private const PADDING = '    ';
 
-    /** @var Reader */
-    private $reader;
-
-    public function __construct($buffer)
+    public function __invoke(string $buffer)
     {
-        $this->reader = new Reader($buffer);
-    }
-
-    public function __invoke()
-    {
-        $reader = $this->reader;
+        $reader = new Reader($buffer);
         $this->debugStruct($reader()->value());
     }
 
@@ -37,26 +29,36 @@ class Debug
         }
     }
 
+    private function debugSeries(Series $value, string $padding): void
+    {
+        printf("%02x [\n", $value->itemType());
+        foreach ($value->value() as $item) {
+            $this->debugValue($item, $padding.self::PADDING);
+            echo ",\n";
+        }
+        echo "{$padding}]";
+    }
+
+    private function debugMap(Map $value, string $padding): void
+    {
+        printf("%02x => %02x [\n", $value->keyType(), $value->valueType());
+        foreach ($value->value() as $key => $item) {
+            $this->debugValue($key, $padding.self::PADDING);
+            echo ' => ';
+            $this->debugValue($item, '');
+            echo ",\n";
+        }
+        echo "{$padding}]";
+    }
+
     private function debugValue($value, string $padding): void
     {
         switch (true) {
             case $value instanceof Series:
-                printf("%02x [\n", $value->itemType());
-                foreach ($value->value() as $item) {
-                    $this->debugValue($item, $padding.self::PADDING);
-                    echo ",\n";
-                }
-                echo "{$padding}]";
+                $this->debugSeries($value, $padding);
                 break;
             case $value instanceof Map:
-                printf("%02x => %02x [\n", $value->keyType(), $value->valueType());
-                foreach ($value->value() as $key => $item) {
-                    $this->debugValue($key, $padding.self::PADDING);
-                    echo ' => ';
-                    $this->debugValue($item, '');
-                    echo ",\n";
-                }
-                echo "{$padding}]";
+                $this->debugMap($value, $padding);
                 break;
             case $value instanceof Struct:
                 echo "{\n";

@@ -15,6 +15,9 @@
             "email": "valga.github@abyrga.ru"
         }
     ],
+    "bin": [
+        "bin/thrift_debug"
+    ],
     "autoload": {
         "psr-4": {
             "Fbns\\": "src/"
