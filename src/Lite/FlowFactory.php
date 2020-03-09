@@ -7,10 +7,10 @@ namespace Fbns\Lite;
 use BinSoul\Net\Mqtt\ClientIdentifierGenerator;
 use BinSoul\Net\Mqtt\Connection;
 use BinSoul\Net\Mqtt\Flow;
-use BinSoul\Net\Mqtt\FlowFactory as FlowFactoryInterface;
 use BinSoul\Net\Mqtt\Message;
 use BinSoul\Net\Mqtt\PacketFactory;
 use BinSoul\Net\Mqtt\PacketIdentifierGenerator;
+use Fbns\React\FlowFactory as FlowFactoryInterface;
 
 class FlowFactory implements FlowFactoryInterface
 {
@@ -37,42 +37,42 @@ class FlowFactory implements FlowFactoryInterface
         $this->packetFactory = $packetFactory;
     }
 
-    public function buildIncomingPingFlow(): Flow\IncomingPingFlow
+    public function buildIncomingPingFlow(): Flow
     {
         return new Flow\IncomingPingFlow($this->packetFactory);
     }
 
-    public function buildIncomingPublishFlow(Message $message, int $identifier = null): Flow\IncomingPublishFlow
+    public function buildIncomingPublishFlow(Message $message, int $identifier = null): Flow
     {
         return new Flow\IncomingPublishFlow($this->packetFactory, $message, $identifier);
     }
 
-    public function buildOutgoingConnectFlow(Connection $connection): OutgoingConnectFlow
+    public function buildOutgoingConnectFlow(Connection $connection): Flow
     {
         return new OutgoingConnectFlow($this->packetFactory, $connection, $this->clientIdentifierGenerator);
     }
 
-    public function buildOutgoingDisconnectFlow(Connection $connection): Flow\OutgoingDisconnectFlow
+    public function buildOutgoingDisconnectFlow(Connection $connection): Flow
     {
         return new Flow\OutgoingDisconnectFlow($this->packetFactory, $connection);
     }
 
-    public function buildOutgoingPingFlow(): Flow\OutgoingPingFlow
+    public function buildOutgoingPingFlow(): Flow
     {
         return new Flow\OutgoingPingFlow($this->packetFactory);
     }
 
-    public function buildOutgoingPublishFlow(Message $message): Flow\OutgoingPublishFlow
+    public function buildOutgoingPublishFlow(Message $message): Flow
     {
         return new Flow\OutgoingPublishFlow($this->packetFactory, $message, $this->packetIdentifierGenerator);
     }
 
-    public function buildOutgoingSubscribeFlow(array $subscriptions): Flow\OutgoingSubscribeFlow
+    public function buildOutgoingSubscribeFlow(array $subscriptions): Flow
     {
         return new Flow\OutgoingSubscribeFlow($this->packetFactory, $subscriptions, $this->packetIdentifierGenerator);
     }
 
-    public function buildOutgoingUnsubscribeFlow(array $subscriptions): Flow\OutgoingUnsubscribeFlow
+    public function buildOutgoingUnsubscribeFlow(array $subscriptions): Flow
     {
         return new Flow\OutgoingUnsubscribeFlow($this->packetFactory, $subscriptions, $this->packetIdentifierGenerator);
     }

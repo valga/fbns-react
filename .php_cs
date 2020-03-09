@@ -7,6 +7,9 @@ return \PhpCsFixer\Config::create()
                 'src',
                 'tests',
             ])
+            ->exclude([
+                'React',
+            ])
     )
     ->setRules([
         '@Symfony'                            => true,

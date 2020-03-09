@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Fbns\Mqtt;
 
-use BinSoul\Net\Mqtt\Client\React\ReactMqttClient;
 use BinSoul\Net\Mqtt\DefaultMessage;
 use BinSoul\Net\Mqtt\Message;
 use BinSoul\Net\Mqtt\StreamParser;
@@ -14,6 +13,7 @@ use Fbns\Connection;
 use Fbns\Lite\ConnectResponsePacket;
 use Fbns\Lite\FlowFactory;
 use Fbns\Lite\PacketFactory;
+use Fbns\React\ReactMqttClient;
 use Psr\Log\LoggerInterface;
 use React\EventLoop\LoopInterface;
 use React\EventLoop\TimerInterface;
