@@ -187,6 +187,10 @@ class Reader
         }
         if (PHP_INT_SIZE === 4) {
             $result = gmp_strval($result, 10);
+            $intResult = (int) $result;
+            if ((string) $intResult === $result) {
+                $result = $intResult;
+            }
         }
 
         return $result;
