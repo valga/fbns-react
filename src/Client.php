@@ -58,7 +58,10 @@ class Client implements EventEmitterInterface
 
     public function connect(string $hostname, int $port, int $timeout = 5): PromiseInterface
     {
-        return $this->rtiClient->connect($hostname, $port, $this->connection, $timeout);
+        return $this->rtiClient->connect($hostname, $port, $this->connection, $timeout)
+            ->then(static function (ConnectResponsePacket $responsePacket) {
+                return $responsePacket->getAuth();
+            });
     }
 
     public function isConnected(): bool

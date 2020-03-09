@@ -81,14 +81,14 @@ class RtiClient implements EventEmitterInterface
                 $this->mqttClient->connect($host, $port, $connection, $timeout)
                     ->then(function (ConnectResponsePacket $responsePacket) use ($deferred) {
                         $this->emit('connect', [$responsePacket]);
-                        $deferred->resolve($this);
+                        $deferred->resolve($responsePacket);
                     })
                     ->otherwise(static function (\Throwable $error) use ($deferred) {
                         $deferred->reject($error);
                     });
             })
-            ->otherwise(function () use ($deferred) {
-                $deferred->reject($this);
+            ->otherwise(static function (\Throwable $e) use ($deferred) {
+                $deferred->reject($e);
             });
 
         return $deferred->promise();
