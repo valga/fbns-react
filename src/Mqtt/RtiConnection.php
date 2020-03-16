@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Fbns\Mqtt;
 
 use BinSoul\Net\Mqtt\Message;
+use BinSoul\Net\Mqtt\Connection as BaseConnection;
 use Fbns\Auth;
 use Fbns\Connection;
 use Fbns\Device;
@@ -119,27 +120,27 @@ class RtiConnection implements Connection
         return self::KEEPALIVE_INTERVAL;
     }
 
-    public function withProtocol(int $protocol): Connection
+    public function withProtocol(int $protocol): BaseConnection
     {
         throw new \LogicException('Protocol version can not be changed.');
     }
 
-    public function withClientID(string $clientID): Connection
+    public function withClientID(string $clientID): BaseConnection
     {
         throw new \LogicException('Client ID must be changed via Auth.');
     }
 
-    public function withCredentials(string $username, string $password): Connection
+    public function withCredentials(string $username, string $password): BaseConnection
     {
         throw new \LogicException('Credentials must be changed via Auth.');
     }
 
-    public function withWill(Message $will = null): Connection
+    public function withWill(Message $will = null): BaseConnection
     {
         throw new \LogicException('Will is not supported.');
     }
 
-    public function withKeepAlive(int $timeout): Connection
+    public function withKeepAlive(int $timeout): BaseConnection
     {
         throw new \LogicException('Keep alive interval can not be changed.');
     }
