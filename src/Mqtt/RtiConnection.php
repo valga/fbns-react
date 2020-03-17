@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Fbns\Mqtt;
 
-use BinSoul\Net\Mqtt\Message;
 use BinSoul\Net\Mqtt\Connection as BaseConnection;
+use BinSoul\Net\Mqtt\Message;
 use Fbns\Auth;
 use Fbns\Connection;
 use Fbns\Device;
