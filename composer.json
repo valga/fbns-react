@@ -40,7 +40,7 @@
         "binsoul/net-mqtt": "^0.7",
         "psr/log": "~1.0",
         "binsoul/net-mqtt-client-react": "^0.7.1",
-        "ramsey/uuid": "^3.9"
+        "ramsey/uuid": "^4.0"
     },
     "require-dev": {
         "monolog/monolog": "~1.23",
