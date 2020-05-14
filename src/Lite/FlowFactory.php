@@ -7,10 +7,10 @@ namespace Fbns\Lite;
 use BinSoul\Net\Mqtt\ClientIdentifierGenerator;
 use BinSoul\Net\Mqtt\Connection;
 use BinSoul\Net\Mqtt\Flow;
+use BinSoul\Net\Mqtt\FlowFactory as FlowFactoryInterface;
 use BinSoul\Net\Mqtt\Message;
 use BinSoul\Net\Mqtt\PacketFactory;
 use BinSoul\Net\Mqtt\PacketIdentifierGenerator;
-use Fbns\React\FlowFactory as FlowFactoryInterface;
 
 class FlowFactory implements FlowFactoryInterface
 {
