@@ -12,6 +12,8 @@ class DeviceAuth implements Auth, \JsonSerializable
 {
     private const TYPE = 'device_auth';
 
+    private const CLIENT_ID_LENGTH = 20;
+
     /** @var string */
     private $clientId;
 
@@ -32,9 +34,14 @@ class DeviceAuth implements Auth, \JsonSerializable
         return Uuid::uuid4()->toString();
     }
 
+    private function defaultClientId(): string
+    {
+        return substr($this->randomUuid(), 0, self::CLIENT_ID_LENGTH);
+    }
+
     public function __construct()
     {
-        $this->clientId = substr($this->randomUuid(), 0, 20);
+        $this->clientId = $this->defaultClientId();
         $this->userId = 0;
         $this->password = '';
         $this->deviceSecret = '';
@@ -53,7 +60,10 @@ class DeviceAuth implements Auth, \JsonSerializable
         }
         if (isset($data->di)) {
             $this->deviceId = $data->di;
-            $this->clientId = substr($this->deviceId, 0, 20);
+            $this->clientId = substr($this->deviceId, 0, self::CLIENT_ID_LENGTH);
+            if ($this->clientId === '') {
+                $this->clientId = $this->defaultClientId();
+            }
         }
         if (isset($data->ds)) {
             $this->deviceSecret = $data->ds;
