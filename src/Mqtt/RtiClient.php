@@ -126,6 +126,10 @@ class RtiClient implements EventEmitterInterface
     {
         $this->logger->warning('Forcing disconnect from the broker');
         $closure = static function (ReactMqttClient $client) {
+            if ($client->stream === null) {
+                return;
+            }
+
             $client->stream->close();
         };
         ($closure->bindTo(null, $this->mqttClient))($this->mqttClient);
