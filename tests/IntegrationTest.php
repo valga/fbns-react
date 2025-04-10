@@ -68,14 +68,14 @@ class IntegrationTest extends TestCase
     {
         $client = new Client($this->loop, $auth, $device, $network, null, $this->connector);
         $client->connect(self::HOSTNAME, 443)
-            ->then(function (?string $authJson) use ($auth, $client, $session) {
+            ->then(function (?string $authJson) use ($auth, $client) {
                 $this->assertTrue($client->isConnected());
                 $this->assertNotEmpty($authJson);
-                $oldAuth = json_encode($auth);
                 $auth->read($authJson);
-                $newAuth = json_encode($auth);
-                $this->assertEquals($oldAuth, $newAuth);
-                file_put_contents($session, $newAuth);
+                $this->assertNotEquals(0, $auth->getUserId());
+                $this->assertNotEmpty($auth->getPassword());
+                $this->assertNotEmpty($auth->getDeviceId());
+                $this->assertNotEmpty($auth->getDeviceSecret());
 
                 $client->register('com.instagram.android', '567067343352427')
                     ->then(function (Registration $registration) use ($client) {
@@ -109,7 +109,13 @@ class IntegrationTest extends TestCase
             return;
         }
         $auth = new DeviceAuth();
+        $this->assertEquals(0, $auth->getUserId());
+        $this->assertEmpty($auth->getPassword());
+        $this->assertEmpty($auth->getDeviceId());
+        $this->assertEmpty($auth->getDeviceSecret());
         $this->connectAndRegister($auth, $device, new Wifi(), $session);
+        $newAuth = json_encode($auth);
+        file_put_contents($session, $newAuth);
     }
 
     public function testReusedSession(): void
@@ -124,7 +130,15 @@ class IntegrationTest extends TestCase
         }
         $auth = new DeviceAuth();
         $auth->read(file_get_contents($session));
+        $this->assertNotEquals(0, $auth->getUserId());
+        $this->assertNotEmpty($auth->getPassword());
+        $this->assertNotEmpty($auth->getDeviceId());
+        $this->assertNotEmpty($auth->getDeviceSecret());
+        $oldAuth = json_encode($auth);
         $this->connectAndRegister($auth, $device, new Lte(), $session);
+        $newAuth = json_encode($auth);
+        $this->assertEquals($oldAuth, $newAuth);
+        file_put_contents($session, $newAuth);
     }
 
     protected function tearDown(): void
